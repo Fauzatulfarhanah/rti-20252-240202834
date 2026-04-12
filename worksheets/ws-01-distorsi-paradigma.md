@@ -53,25 +53,28 @@ Mata kuliah ini menggunakan pendekatan **Positivist** (fenomena TI bisa diukur o
 ## Template A.1 — Research Mindset Self-Assessment
 
 ```
-Nama Peneliti    : ____________________
-Tanggal          : ____________________
+Nama Peneliti    : Fauzatul Farhanah
+Tanggal          : 10 April 2026
 
 1. Ketika membaca klaim "metode X 95% akurat":
-   - Pertanyaan pertama saya: ____________________
-   - Data yang dibutuhkan untuk verifikasi: ____________________
+   - Pertanyaan pertama saya:  Apakah data yang digunakan itu data asli atau hanya data buatan?
+   - Data yang dibutuhkan untuk verifikasi: Dataset yang digunakan, jumlah data, dan cara pengujian akurasi
+
 
 2. Posisi paradigma:
-   - Pendekatan: [ ] Positivis  [ ] Interpretivis  [ ] Design Science  [ ] Mixed
-   - Alasan: ____________________
+   - Pendekatan: [✅] Positivis  [ ] Interpretivis  [✅] Design Science  [ ] Mixed
+   - Alasan: Karena penelitian ini menggunakan data dan perhitungan (akurasi, MAE, RMSE), serta membuat sistem rekomendasi sebagai alat untuk diuji.
+
 
 3. Identifikasi distorsi:
-   - Asumsi tersembunyi: ____________________
-   - Sumber bias potensial: ____________________
-   - Langkah mitigasi: ____________________
+   - Asumsi tersembunyi: Data dummy dianggap cukup mewakili kondisi nyata
+   - Sumber bias potensial: Data dibuat sendiri sehingga belum tentu mencerminkan kondisi pengguna sebenarnya
+   - Langkah mitigasi: Menggunakan data asli dan melakukan pengujian pada kondisi sebenarnya.
+
 
 4. Komitmen etika:
-   - Data yang tidak akan dimanipulasi: ____________________
-   - Batasan yang diakui sejak awal: ____________________
+   - Data yang tidak akan dimanipulasi:  Nilai hasil eksperimen seperti MAE dan RMSE tidak akan dimanipulasi
+   - Batasan yang diakui sejak awal: Data yang digunakan adalah data dummy sehingga hasil mungkin tidak sepenuhnya akurat
 ```
 
 ---
@@ -81,23 +84,23 @@ Tanggal          : ____________________
 Pilih satu paper riset di bidang TI yang mengklaim "metode X meningkatkan performa." Telusuri setiap tahap Research Trust Model.
 
 **Paper yang dipilih:**
-> Judul: _______________________________________________
-> Penulis (Tahun): ______________________________________
+> Judul: Peningkatan Akurasi Rekomendasi Dokter pada Kondisi Data Sparsity Menggunakan Algoritma Content-Based Filtering 
+> Penulis (Tahun): Alwan Prasetya, Ahsanun Naseh Khudori, Risqy Siwi Pradini (2025)
 
 | Tahap | Apa yang Dilakukan | Potensi Distorsi |
 |-------|-------------------|-----------------|
-| Reality → Data | *Contoh: Kumpulkan log server 30 hari* | *Contoh: Hanya ambil jam sibuk* |
-| Data → Processing | | |
-| Processing → Analysis | | |
-| Analysis → Inference | | |
-| Inference → Knowledge | | |
+| Reality → Data | Membuat dataset dummy(data buatan) 1.000 dokter dan 500 pasien untuk simulasi| Data tidak berasal dari kondisi nyata, sehingga berpotensi tidak merepresentasikan perilaku pengguna sebenarnya|
+| Data → Processing | Melakukan imputasi data kosong menggunakan mean (numerik) dan modus (kategorikal)|Data menjadi tidak asli karena diisi secara perkiraan |
+| Processing → Analysis | Menggunakan algoritma Content-Based Filtering dengan cosine similarity berdasarkan 5 atribut | Model hanya melihat beberapa atribut, faktor lain diabaikan |
+| Analysis → Inference | Menyimpulkan akurasi meningkat berdasarkan penurunan nilai MAE dan RMSE| Metrik evaluasi hanya berbasis simulasi sehingga belum tentu mencerminkan kepuasan pengguna nyata|
+| Inference → Knowledge | Menyimpulkan metode efektif untuk sistem rekomendasi dokter | Hasil belum tentu dapat digeneralisasi ke dunia nyata karena belum diuji pada data real |
 
-**Distorsi paling besar di tahap:** ________________________
+**Distorsi paling besar di tahap:** Reality → Data
+Karena sejak awal data yang digunakan bukan data asli (menggunakan data  dummy), jadi hasilnya bisa berbeda dengan kondisi yang sebenarnya.
 
 **Dua distorsi spesifik yang teridentifikasi:**
-1. ___________________________________________________
-2. ___________________________________________________
-
+1. Sampling bias (Dataset yang digunakan merupakan data buatan sehingga tidak sepenuhnya mewakili kondisi nyata pengguna dan dokter.)
+2. External Validity (Hasil penelitian belum tentu dapat diterapkan di dunia nyata karena tidak diuji menggunakan data asli pengguna.)
 ---
 
 ## Latihan 2 — Analisis Kasus Etika
@@ -106,34 +109,30 @@ Skenario: Seorang peneliti menemukan bahwa jika 3 data point outlier dihapus, ha
 
 | Perspektif | Analisis |
 |------------|---------|
-| Kejujuran ilmiah | *Contoh: Laporkan kedua versi (dengan dan tanpa outlier)* |
-| Transparansi | |
-| Peer review | |
+| Kejujuran ilmiah | Peneliti sebaiknya menampilkan hasil dengan dan tanpa outlier supaya tidak menyesatkan|
+| Transparansi | Harus dijelaskan alasan kenapa outlier dihapus, misalnya karena ada kesalahan data atau tidak wajar|
+| Peer review | Reviewer bisa menolak jika data dihapus tanpa alasan jelas|
 
 **Keputusan akhir dan justifikasi:**
-> ___________________________________________________
-
+> Data tidak boleh langsung dihapus begitu saja. Outlier boleh dihapus kalau memang ada alasan yang masuk akal (misalnya error). Tapi tetap lebih baik menampilkan dua hasil (dengan dan tanpa outlier) supaya penelitian tetap jujur dan transparan.
 ---
 
 ## Latihan 3 — Posisi Paradigma
 
-**Topik riset:** ________________________________________
+**Topik riset:** Sistem rekomendasi dokter menggunakan Content-Based Filtering
 
 | Kriteria | Positivis | Interpretivis | Design Science |
 |----------|-----------|---------------|----------------|
-| Kesesuaian dengan topik (1–5) | *Contoh: 4* | *Contoh: 2* | *Contoh: 5* |
-| Jenis data yang dikumpulkan | | | |
-| Limitasi paradigma | | | |
+| Kesesuaian dengan topik (1–5) | 5 | 1 | 5 |
+| Jenis data yang dikumpulkan | Data numerik (rating, biaya, dll) | Pendapat/pengalaman pengguna | Data sistem & hasil pengujian |
+| Limitasi paradigma | Kurang melihat sisi subjektif pengguna | Kurang cocok untuk perhitungan angka | Lebih fokus ke sistem, jadi sisi teorinya tidak terlalu dalam |
 
-**Paradigma yang dipilih:** _____________________________
-**Alasan:** ____________________________________________
-
----
+**Paradigma yang dipilih:** Positivis dan Design Science
+**Alasan:** Karena penelitian ini menggunakan data angka dan perhitungan seperti MAE dan RMSE (positivis), serta membuat sistem rekomendasi yang diuji performanya (design science).
 
 ## Refleksi
 
 > Sebelum membaca materi ini, apakah pernah mempertanyakan klaim "95% akurat"? Setelah memahami rantai distorsi, pertanyaan apa yang sekarang akan diajukan saat membaca paper?
 
 **Jawaban:**
-> ___________________________________________________
-> ___________________________________________________
+> Sebelumnya saya langsung percaya dengan klaim seperti “95% akurat”. Tetapi, setelah memahami tentang distorsi, saya akan bertanya apakah data yang digunakan itu benar-benar dari kondisi nyata, bagaimana cara menghitung akurasinya, dan apakah hasilnya bisa benar-benar dipakai di dunia nyata.
