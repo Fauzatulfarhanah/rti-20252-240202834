@@ -66,19 +66,19 @@ Metrik harus ditentukan **sebelum** eksperimen. Memilih metrik setelah melihat d
 ```
 VARIABLE & METRIC DEFINITION
 
-Research Question: ____________________
+Research Question: Bagaimana perbandingan kinerja YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia berdasarkan nilai confidence pada citra dari video CCTV?
 
 | Variabel | Tipe | Konsep | Metrik | Skala | Satuan | Cara Mengukur | Justifikasi |
 |----------|------|--------|--------|-------|--------|---------------|-------------|
-|          | IV   |        |        |       |        |               |             |
-|          | DV   |        |        |       |        |               |             |
-|          | CV   |        |        |       |        |               |             |
+| Jenis metode (YOLOv2, YOLOv3) | IV   | Algoritma deteksi objek | Kategori metode yang digunakan | Nominal |   -   | Menentukan model yang dipakai saat proses deteksi  |  Karena penelitian memang membandingkan dua metode berbeda |
+| Hasil deteksi manusia | DV | Kemampuan model dalam mendeteksi dan menghitung jumlah manusia | Nilai confidence (tingkat keyakinan deteksi) dan jumlah manusia yang terdeteksi | Ratio | Confidence (0–1), jumlah (orang) | Mengambil output dari sistem deteksi YOLO pada setiap frame | Confidence menunjukkan tingkat keyakinan model terhadap objek yang terdeteksi, sedangkan jumlah objek menunjukkan hasil perhitungan manusia yang terdeteksi secara langsung |
+| Kondisi input (citra CCTV yang sama) | CV | Konsistensi data uji | Menggunakan data uji yang sama untuk kedua metode agar hasil perbandingan tidak dipengaruhi perbedaan input | Nominal | - | Menggunakan dataset yang sama untuk YOLOv2 dan YOLOv3 | Supaya perbandingan adil dan tidak bias |
 
 Alignment Check:
   RQ → Concept → Variable → Metric → Data → Result
-  [ ] Setiap langkah terdokumentasi
-  [ ] Tidak ada "lompatan logis"
-  [ ] Metrik mengukur apa yang dimaksud (construct validity)
+  [✅] Setiap langkah terdokumentasi
+  [✅] Tidak ada "lompatan logis"
+  [✅] Metrik mengukur apa yang dimaksud (construct validity)
 ```
 
 ---
@@ -87,16 +87,16 @@ Alignment Check:
 
 Gunakan RQ dari WS-04. Definisikan variabel dan metriknya.
 
-**RQ:** __________________________________________________
+**RQ:** Bagaimana perbandingan kinerja YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia berdasarkan nilai confidence pada citra dari video CCTV?
 
 | Variabel | Tipe | Konsep Abstrak | Metrik Konkret | Skala (NOIR) | Satuan |
 |----------|------|---------------|----------------|-------------|--------|
-| *Contoh: Jenis model* | *IV* | *Pendekatan klasifikasi* | *Categorical: CNN vs RF* | *Nominal* | *—* |
-| | DV | | | | |
-| | CV | | | | |
+| Jenis metode | IV | Algoritma deteksi | YOLOv2 dan YOLOv3 | Nominal | — |
+| Hasil deteksi manusia | DV | Performa deteksi dan perhitungan jumlah manusia | Confidence (tingkat keyakinan deteksi) dan jumlah manusia terdeteksi | Ratio | Nilai dan jumlah |
+| Kondisi input | CV | Konsistensi data uji | Citra CCTV yang sama | Nominal | - |
 
-**Apakah ada lompatan logis dalam rantai?** [ ] Ya / [ ] Tidak
-> Jika ya, di mana? ____________________________________
+**Apakah ada lompatan logis dalam rantai?** [ ] Ya / [✅] Tidak
+> Jika ya, di mana? Tidak ada, semua masih nyambung dari metode sampai hasil.
 
 ---
 
@@ -106,15 +106,14 @@ Evaluasi metrik DV yang dipilih di Latihan 1 menggunakan 3 kriteria.
 
 | Kriteria | Skor (1-5) | Justifikasi |
 |----------|-----------|-------------|
-| Representative | *Contoh: 4 — F1-Score mewakili keseimbangan precision-recall* | |
-| Sensitive | | |
-| Feasible | | |
+| Representative | 4 | Confidence dan jumlah objek sudah mewakili kemampuan sistem dalam mendeteksi dan menghitung manusia |
+| Sensitive      | 4 | Perubahan kecil pada performa model dapat terlihat dari perbedaan nilai confidence dan jumlah objek yang terdeteksi |
+| Feasible       | 5 | Data mudah didapat langsung dari output sistem YOLO |
 
-**Apakah perlu secondary metric?** [ ] Ya / [ ] Tidak
-> Jika ya, apa dan mengapa? _____________________________
-
+**Apakah perlu secondary metric?** [✅] Ya / [ ] Tidak
+> Jika ya, apa dan mengapa?  Bisa ditambahkan waktu proses (processing time), karena selain akurasi, kecepatan juga penting dalam sistem deteksi real-time.
 **Contoh kasus ceiling effect untuk metrik ini:**
-> ___________________________________________________
+> Jika nilai confidence dari kedua metode sudah sama-sama tinggi (misalnya mendekati 0,9 atau 1), maka akan sulit melihat perbedaan performa secara jelas karena keduanya terlihat sama-sama baik.
 
 ---
 
@@ -124,10 +123,10 @@ Bayangkan data yang akan dikumpulkan dari eksperimen. Evaluasi 4 dimensi kualita
 
 | Dimensi | Pertanyaan | Jawaban | Strategi Mitigasi |
 |---------|-----------|---------|------------------|
-| Completeness | *Apakah semua data point terkumpul?* | | |
-| Consistency | *Apakah ada kontradiksi internal?* | | |
-| Validity | *Apakah benar-benar mengukur yang dimaksud?* | | |
-| Representativeness | *Apakah sampel mewakili populasi target?* | | |
+| Completeness | Apakah semua data terkumpul? | Tidak semua frame dari video mungkin berhasil diproses atau terdeteksi dengan baik | Pastikan semua frame diproses dan lakukan pengecekan ulang pada data yang hilang |
+| Consistency | Apakah ada kontradiksi? | Bisa terjadi perbedaan hasil deteksi pada frame yang berbeda walaupun objek sama | Gunakan kondisi pengujian yang sama dan parameter model yang konsisten |
+| Validity | Apakah mengukur yang dimaksud? | Ya, karena data diambil langsung dari output sistem deteksi YOLO sesuai dengan tujuan penelitian | Gunakan parameter dan threshold yang sesuai agar hasil deteksi lebih akurat |
+| Representativeness | Apakah mewakili kondisi nyata? | Terbatas pada video tertentu sehingga belum mewakili semua kondisi lingkungan | Gunakan variasi data dari berbagai kondisi jika memungkinkan |
 
 ---
 
@@ -136,5 +135,7 @@ Bayangkan data yang akan dikumpulkan dari eksperimen. Evaluasi 4 dimensi kualita
 > Mengapa memilih metrik setelah melihat data dianggap p-hacking? Apa bedanya dengan eksplorasi data yang sah?
 
 **Jawaban:**
-> ___________________________________________________
-> ___________________________________________________
+> Memilih metrik setelah melihat data dianggap p-hacking karena bisa membuat hasil terlihat lebih baik dari yang sebenarnya. Misalnya kita memilih metrik yang paling menguntungkan setelah melihat hasil, bukan dari awal. 
+
+> Berbeda dengan eksplorasi data, eksplorasi dilakukan untuk memahami data tanpa mengubah tujuan awal penelitian. Jadi eksplorasi masih boleh, tapi tidak boleh mengganti metrik utama setelah hasil terlihat.
+
