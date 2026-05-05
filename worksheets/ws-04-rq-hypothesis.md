@@ -67,34 +67,34 @@ Jika rantai ini tidak lengkap, RQ belum mature. Bi-directional: RQ yang tidak bi
 ```
 RQ-CONTRIBUTION-HYPOTHESIS
 
-Gap Statement  : ____________________
+Gap Statement  : [Performance Gap] Penelitian sebelumnya menunjukkan bahwa metode YOLO sudah mampu mendeteksi manusia, namun masih terdapat perbedaan performa antara YOLOv2 dan YOLOv3 dalam hal nilai confidence dan jumlah objek yang terdeteksi. Hal ini menunjukkan bahwa performa sistem belum sepenuhnya optimal, sehingga perlu perbandingan untuk mengetahui metode yang lebih baik dalam mendeteksi dan menghitung manusia.
 
 Research Question:
-  Tipe         : [ ] Comparison  [ ] Improvement  [ ] Exploratory
-  Formulasi    : ____________________
-  Variabel IV  : ____________________
-  Variabel DV  : ____________________
-  Metrik       : ____________________
-  Dataset      : ____________________
-  Baseline     : ____________________
+  Tipe         : [✅] Comparison  [ ] Improvement  [ ] Exploratory
+  Formulasi    : Bagaimana perbandingan kinerja YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia berdasarkan nilai confidence pada citra dari video CCTV?
+  Variabel IV  : Jenis metode yang digunakan (YOLOv2 dan YOLOv3)
+  Variabel DV  : Hasil deteksi manusia dan jumlah objek yang terdeteksi
+  Metrik       : Nilai confidence dan jumlah objek yang terdeteksi
+  Dataset      : Citra hasil ekstraksi frame dari video CCTV
+  Baseline     :  YOLOv2
 
 Quality Check RQ:
-  [ ] Variabel spesifik
-  [ ] Metrik jelas
-  [ ] Baseline ada
-  [ ] Konteks disebutkan
-  [ ] Memerlukan eksperimen (bukan hanya survei literatur)
+  [✅] Variabel spesifik
+  [✅] Metrik jelas
+  [✅] Baseline ada
+  [✅] Konteks disebutkan
+  [✅] Memerlukan eksperimen (bukan hanya survei literatur)
 
 Contribution Statement:
-  Apa yang baru diketahui : ____________________
-  Jenis kontribusi        : [ ] Improvement  [ ] Comparison  [ ] Novel approach
-  Gap yang diisi          : ____________________
+  Apa yang baru diketahui : Penelitian ini memberikan hasil perbandingan antara YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia sehingga dapat diketahui metode yang memiliki performa lebih baik.
+  Jenis kontribusi        : [ ] Improvement  [✅] Comparison  [ ] Novel approach
+  Gap yang diisi          : Perbedaan performa antara YOLOv2 dan YOLOv3 dalam deteksi manusia.
 
 Hypothesis Pair:
-  H₀ : ____________________
-  H₁ : ____________________
-  Threshold              : ____________________
-  Justifikasi threshold  : ____________________
+  H₀ : Tidak terdapat perbedaan yang signifikan pada nilai confidence antara YOLOv2 dan YOLOv3 dalam mendeteksi manusia.
+  H₁ : Terdapat perbedaan yang signifikan pada nilai confidence antara YOLOv2 dan YOLOv3 dalam mendeteksi manusia.
+  Threshold              : 0,05
+  Justifikasi threshold  : Nilai 0,05 digunakan sebagai batas umum untuk menentukan apakah perbedaan yang terjadi signifikan atau tidak.
 ```
 
 ---
@@ -103,24 +103,24 @@ Hypothesis Pair:
 
 Gunakan gap yang ditemukan di WS-03. Transformasikan menjadi Research Question.
 
-**Gap dari WS-03:** ____________________________________
+**Gap dari WS-04:** Perbedaan performa antara YOLOv2 dan YOLOv3 dalam mendeteksi manusia berdasarkan nilai confidence dan hasil deteksi.
 
 **RQ versi pertama (tulis bebas):**
-> ___________________________________________________
+> Apakah YOLOv3 lebih baik dibandingkan YOLOv2 dalam mendeteksi manusia?
 
 **Evaluasi RQ:**
 
 | Komponen | Ada? | Isi |
 |----------|------|-----|
-| Metode spesifik | *Contoh: Ya — CNN vs RF* | |
-| Metrik terukur | | |
-| Baseline | | |
-| Dataset/konteks | | |
+| Metode spesifik | Ya| Perbandingan YOLOv2 dan YOLOv3 |
+| Metrik terukur | Belum| Nilai confidence belum disebutkan secara jelas|
+| Baseline | Ya| YOLOv2 sebagai pembanding|
+| Dataset/konteks | Belum| Dataset citra dari CCTV belum disebutkan|
 
-**Tipe RQ:** [ ] Comparison / [ ] Improvement / [ ] Exploratory
+**Tipe RQ:** [✅] Comparison / [ ] Improvement / [ ] Exploratory
 
 **RQ versi revisi (setelah evaluasi):**
-> ___________________________________________________
+> Bagaimana perbandingan kinerja YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia berdasarkan nilai confidence pada dataset citra yang berasal dari video CCTV?
 
 ---
 
@@ -130,14 +130,14 @@ Rumuskan pasangan hipotesis dari RQ di Latihan 1.
 
 | Komponen | Isi |
 |----------|-----|
-| H₀ | *Contoh: Tidak ada perbedaan signifikan F1-Score antara CNN dan RF pada dataset CIC-MalMem-2022* |
-| H₁ | |
-| Metrik | |
-| Threshold | |
-| Justifikasi threshold | |
+| H₀ | Tidak terdapat perbedaan signifikan pada nilai confidence antara YOLOv2 dan YOLOv3 |
+| H₁ | Terdapat perbedaan signifikan pada nilai confidence antara YOLOv2 dan YOLOv3 |
+| Metrik | Confidence |
+| Threshold | 0,05 |
+| Justifikasi threshold | Digunakan sebagai batas umum untuk menentukan apakah perbedaan yang terjadi signifikan atau tidak |
 
-**Apakah hipotesis ini falsifiable?** [ ] Ya / [ ] Tidak
-> Bagaimana cara membuktikannya salah? ___________________
+**Apakah hipotesis ini falsifiable?** [✅] Ya / [ ] Tidak
+> Bagaimana cara membuktikannya salah? Dengan membandingkan hasil nilai confidence dari YOLOv2 dan YOLOv3. Jika hasilnya berbeda secara signifikan, maka H₀ ditolak.
 
 ---
 
@@ -147,15 +147,15 @@ Lengkapi rantai dari RQ hingga metode analisis.
 
 | Tahap | Isi |
 |-------|-----|
-| RQ | *Contoh: Apakah CNN menghasilkan F1-Score lebih tinggi dari RF...* |
-| Variable (IV) | *Contoh: Jenis algoritma (CNN vs RF)* |
-| Variable (DV) | |
-| Metric | |
-| Data source | |
-| Analysis method | |
+| RQ | Perbandingan YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia |
+| Variable (IV) | Jenis metode (YOLOv2 dan YOLOv3) |
+| Variable (DV) | Hasil deteksi dan jumlah manusia |
+| Metric | Confidence dan jumlah objek |
+| Data source | Citra dari video CCTV |
+| Analysis method | Perbandingan hasil deteksi antara YOLOv2 dan YOLOv3 |
 
-**Apakah rantai lengkap?** [ ] Ya / [ ] Tidak
-> Jika tidak, tahap mana yang perlu direvisi? ______________
+**Apakah rantai lengkap?** [✅] Ya / [ ] Tidak
+> Jika tidak, tahap mana yang perlu direvisi? lengkap
 
 ---
 
@@ -163,6 +163,9 @@ Lengkapi rantai dari RQ hingga metode analisis.
 
 > Ambil satu judul skripsi/paper yang pernah dibaca. Coba ekstrak RQ-nya. Apakah RQ tersebut memenuhi semua komponen (metode, metrik, baseline, konteks)? Jika tidak, apa yang hilang?
 
-**Judul:** _____________________________________________
-**RQ yang diekstrak:** __________________________________
-**Komponen yang hilang:** _______________________________
+**Judul:** Deteksi dan Menghitung Manusia Menggunakan YOLO-CNN
+**RQ yang diekstrak:** Bagaimana perbandingan kinerja YOLOv2 dan YOLOv3 dalam mendeteksi manusia berdasarkan nilai confidence pada citra CCTV?
+**Komponen yang hilang:** Tidak ada, karena sudah mencakup metode, metrik, baseline, dan dataset.
+
+## Referensi 
+Pamungkas, B. P. G., Nugroho, B., & Anggraeny, F. (2021). Deteksi dan menghitung manusia menggunakan YOLO-CNN. Jurnal Informatika dan Sistem Informasi (JIFoSI), 2(1). https://d1wqtxts1xzle7.cloudfront.net/100194989/154-libre.pdf?1679582891=&response-content-disposition=inline%3B+filename%3DPenggunaan_lift_pada_gedung_gedu_DETEKSI.pdf&Expires=1777949909&Signature=EDef7tSF2CpB5vTX2vpWAteiB-~omcr2FGe2gJ5vqSKXB-OCEYz2zhpCXx2EMcG-rt3y0FooCEnxVRty2~~oS0wQvJezRqnN5odK8ufQlQ7k35QILGk1TQ5CDC1MFW5iyOfOuANEMCKDAq3JfpW68PclHoTv~qm~rIdRcjBuVEcHCm--wgKyYZkySWHxCX-R~LsU-w8dnzHtS0rZPCaeYisXMdtRgUQrrLa7Za3FaCYc5yiMGDLkP4JdCyK6zp2v6MWDcEppzIUdTVYcogLvQTwyHmjrWMIg6l5DoYXqXyCDEHZgXegLcNLmffMNP7Mhy4VL3Vdbl0s6tyPeYvaDKA__&Key-Pair-Id=APKAJLOHF5GGSLRBV4ZA
