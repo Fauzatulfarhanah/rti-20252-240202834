@@ -68,51 +68,50 @@ Ancaman validitas harus diidentifikasi **sebelum** eksperimen dan mitigasinya di
 ```
 EXPERIMENT DESIGN
 
-Research Question : ____________________
-Hypothesis        : ____________________
-Tipe Eksperimen   : [ ] Comparison  [ ] Ablation  [ ] Parameter
+Research Question : Bagaimana perbandingan kinerja YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia berdasarkan nilai confidence pada citra dari video CCTV?
+Hypothesis        : YOLOv3 memiliki performa lebih baik dibandingkan YOLOv2 dalam mendeteksi dan menghitung manusia berdasarkan nilai confidence pada citra CCTV.
+Tipe Eksperimen   : [✅] Comparison  [ ] Ablation  [ ] Parameter
 
 Kondisi Eksperimen:
 | Kondisi | Deskripsi | IV Value | CV Settings |
 |---------|-----------|----------|-------------|
-| Control |           |          |             |
-| Treatment |         |          |             |
+| Control | Pengujian deteksi manusia menggunakan YOLOv2 | YOLOv2 | Dataset video CCTV yang sama, threshold 0.30, preprocessing dan environment yang sama |
+| Treatment | Pengujian deteksi manusia menggunakan YOLOv3 | YOLOv3 | Dataset video CCTV yang sama, threshold 0.30, preprocessing dan environment yang sama |
 
 Fairness Checklist:
-  [ ] Dataset identik untuk semua kondisi
-  [ ] Preprocessing setara
-  [ ] Tuning effort setara
-  [ ] Environment identik
-  [ ] Metrik evaluasi sama
+  [✅] Dataset identik untuk semua kondisi
+  [✅] Preprocessing setara
+  [✅] Tuning effort setara
+  [✅] Environment identik
+  [✅] Metrik evaluasi sama
 
 Threat Analysis:
 | Threat Type | Ancaman Spesifik | Mitigasi |
 |-------------|-----------------|----------|
-| Internal    |                 |          |
-| External    |                 |          |
-| Construct   |                 |          |
-| Conclusion  |                 |          |
+| Internal | Perbedaan parameter atau threshold dapat memengaruhi hasil deteksi | Menggunakan threshold dan parameter yang sama pada kedua model |
+| External | Dataset hanya berasal dari CCTV lift sehingga kurang mewakili kondisi lain | Menggunakan variasi video CCTV dari kondisi berbeda jika memungkinkan |
+| Construct | Nilai confidence belum sepenuhnya menggambarkan keseluruhan performa deteksi | Menambahkan metrik pendukung seperti jumlah objek terdeteksi dan processing time | Menggunakan jumlah objek terdeteksi sebagai metrik tambahan |
+| Conclusion | Jumlah data uji terbatas dapat memengaruhi kesimpulan penelitian | Menambah jumlah data uji dan melakukan pengujian berulang |
 
 Statistical Plan:
-  Uji statistik   : ____________________
-  Justifikasi      : ____________________
-  Alpha            : ____________________
-  Effect size min  : ____________________
+  Uji statistik    : Analisis perbandingan nilai confidence rata-rata
+  Justifikasi      : Digunakan untuk melihat perbedaan performa kedua model pada kondisi yang sama
+  Alpha            : 0.05
+  Effect size min  : Perbedaan nilai confidence rata-rata yang menunjukkan peningkatan performa deteksi
 ```
 
 ---
 
 ## Latihan 1 — Desain Eksperimen
 
-Susun desain eksperimen berdasarkan RQ, variabel, dan sistem dari WS-04 sampai WS-06.
+**RQ:** Bagaimana perbandingan kinerja YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia berdasarkan nilai confidence pada citra dari video CCTV?
 
-**RQ:** __________________________________________________
-**Tipe eksperimen:** [ ] Comparison / [ ] Ablation / [ ] Parameter
+**Tipe eksperimen:** [✅] Comparison / [ ] Ablation / [ ] Parameter
 
 | Kondisi | Deskripsi | IV Value | CV Settings |
 |---------|-----------|----------|-------------|
-| Control | *Contoh: RF baseline dari literatur* | *RF* | *Dataset X, 80:20 split, seed 42* |
-| Treatment | | | |
+| Control | Pengujian menggunakan model YOLOv2 | YOLOv2 | Dataset video CCTV yang sama, threshold 0.30, preprocessing yang sama |
+| Treatment | Pengujian menggunakan model YOLOv3 | YOLOv3 | Dataset video CCTV yang sama, threshold 0.30, preprocessing yang sama |
 
 ---
 
@@ -122,14 +121,14 @@ Evaluasi apakah desain eksperimen di Latihan 1 sudah fair.
 
 | Kriteria | Status | Detail |
 |----------|--------|--------|
-| Dataset identik | *Contoh: ✅ — sama-sama pakai CIC-MalMem-2022* | |
-| Preprocessing setara | | |
-| Tuning effort setara | | |
-| Environment identik | | |
-| Metrik evaluasi sama | | |
+| Dataset identik | ✅ | Menggunakan dataset video CCTV yang sama untuk YOLOv2 dan YOLOv3 |
+| Preprocessing setara | ✅ | Kedua metode menggunakan proses preprocessing yang sama pada dataset CCTV  |
+| Tuning effort setara | ✅ | Kedua model menggunakan threshold yang sama yaitu 0.30 |
+| Environment identik | ✅ | Pengujian dilakukan pada sistem dan environment yang sama |
+| Metrik evaluasi sama | ✅ | Kedua metode dibandingkan menggunakan nilai confidence dan jumlah manusia yang terdeteksi |
 
-**Ada yang tidak fair?** [ ] Ya / [ ] Tidak
-> Jika ya, bagaimana cara memperbaikinya? ________________
+**Ada yang tidak fair?** [ ] Ya / [✅] Tidak
+> Karena kedua metode diuji menggunakan dataset, preprocessing, parameter, dan metrik evaluasi yang sama, maka perbandingan sudah dilakukan secara adil.
 
 ---
 
@@ -139,15 +138,14 @@ Identifikasi ancaman validitas untuk desain eksperimen ini.
 
 | Threat Type | Ancaman Spesifik | Mitigasi |
 |-------------|-----------------|----------|
-| Internal | *Contoh: Data leakage antara train-test* | *Contoh: Gunakan stratified split, validasi tidak ada overlap* |
-| External | | |
-| Construct | | |
-| Conclusion | | |
+| Internal | Perbedaan hasil deteksi bisa dipengaruhi kondisi pengujian yang tidak sama | Menggunakan dataset, parameter, dan environment yang sama untuk YOLOv2 dan YOLOv3 |
+| External | Dataset CCTV yang digunakan terbatas sehingga hasil belum tentu berlaku untuk semua kondisi nyata | Menggunakan variasi video CCTV dengan kondisi pencahayaan dan jumlah objek yang berbeda |
+| Construct | Nilai confidence belum sepenuhnya menggambarkan keseluruhan performa deteksi | Menambahkan metrik pendukung seperti jumlah objek terdeteksi dan processing time |
+| Conclusion | Jumlah data atau frame yang diuji terlalu sedikit sehingga hasil kurang kuat secara statistik | Menggunakan jumlah frame dan data uji yang lebih banyak agar hasil lebih valid |
 
-**Ancaman mana yang paling sulit dimitigasi?** _____________
+**Ancaman mana yang paling sulit dimitigasi?** External validity
 **Mengapa?**
-> ___________________________________________________
-
+> Karena dataset penelitian hanya berasal dari rekaman CCTV lift sehingga hasil penelitian belum tentu mewakili kondisi di tempat lain, seperti area ramai, pencahayaan berbeda, atau sudut kamera yang berbeda.
 ---
 
 ## Refleksi
@@ -155,6 +153,9 @@ Identifikasi ancaman validitas untuk desain eksperimen ini.
 > Sebuah paper melaporkan "metode kami mengalahkan semua baseline." Apa 3 pertanyaan pertama yang harus diajukan untuk mengevaluasi klaim ini?
 
 **Jawaban:**
-1. ___________________________________________________
-2. ___________________________________________________
-3. ___________________________________________________
+1. Apakah semua metode diuji menggunakan dataset dan kondisi yang sama?
+2. Apakah parameter dan preprocessing setiap metode dibuat setara dan adil?
+3. Metrik evaluasi apa yang digunakan untuk membandingkan performa metode?
+
+## Referensi
+Pamungkas, B. P., Nugroho, B., & Anggraeny, F. (2021). Deteksi dan Menghitung Manusia Menggunakan YOLO-CNN. Jurnal Informatika dan Sistem Informasi (JIFoSI), 2(1), 67–76. https://www.semanticscholar.org/paper/Penggunaan-lift-pada-gedung-gedu-DETEKSI-DAN-Putra-Nugroho/0ff4c70d327624389d5197e2773db37e3816325d
