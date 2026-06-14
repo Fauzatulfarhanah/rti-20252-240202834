@@ -61,25 +61,25 @@ Problem (Bab 2) → Gap (Bab 3) → RQ & H (Bab 4) → Metrik (Bab 5) → Sistem
 PROPOSAL INTEGRATION CHECKLIST
 
 Koneksi Vertikal (Flow Atas-Bawah):
-  [ ] Problem → Gap: masalah terdokumentasi di literatur
-  [ ] Gap → RQ: pertanyaan menjawab gap spesifik
-  [ ] RQ → Hypothesis: hipotesis memprediksi jawaban
-  [ ] Hypothesis → Metric: metrik mengukur variabel dalam hipotesis
-  [ ] Metric → System: komponen sistem menghasilkan/mengukur metrik
-  [ ] System → Experiment: desain eksperimen menggunakan sistem
+  [✅] Problem → Gap: masalah terdokumentasi di literatur
+  [✅] Gap → RQ: pertanyaan menjawab gap spesifik
+  [✅] RQ → Hypothesis: hipotesis memprediksi jawaban
+  [✅] Hypothesis → Metric: metrik mengukur variabel dalam hipotesis
+  [✅] Metric → System: komponen sistem menghasilkan/mengukur metrik
+  [✅] System → Experiment: desain eksperimen menggunakan sistem
 
 Koneksi Horizontal (Konsistensi):
-  [ ] Istilah sama di semua bagian
-  [ ] Variabel di RQ = variabel di hipotesis = metrik di desain
-  [ ] Scope tidak berubah dari masalah ke eksperimen
+  [✅] Istilah sama di semua bagian
+  [✅] Variabel di RQ = variabel di hipotesis = metrik di desain
+  [✅] Scope tidak berubah dari masalah ke eksperimen
 
 Rubrik Self-Assessment:
 | Kriteria | 1 (Lemah) | 2 (Cukup) | 3 (Baik) | Skor |
 |----------|-----------|-----------|----------|------|
-| Koherensi |          |           |          |      |
-| Specificity |        |           |          |      |
-| Feasibility |        |           |          |      |
-| Rigor     |          |           |          |      |
+| Koherensi | Koneksi antar komponen tidak jelas | Sebagian koneksi ada tapi belum eksplisit | Semua 6 koneksi kritis terhubung jelas dan konsisten | 3 |
+| Specificity | Metrik tidak terdefinisi numerik | Metrik ada tapi sebagian masih umum | Metrik numerik lengkap (confidence 0–1, threshold 0.30, 150 citra, 10 video, 3 skenario kepadatan) | 3 |
+| Feasibility | Dataset/tools tidak tersedia | Tools tersedia, jadwal terlalu optimistis | Dataset teridentifikasi (1.500 train, 150 test), tools konkret, namun jadwal 7 minggu cukup padat dan bergantung pada GPU Colab gratis | 2 |
+| Rigor | Tidak ada kontrol variabel | Ada kontrol variabel, analisis deskriptif saja tanpa prosedur yang jelas | Kontrol variabel ketat (dataset, threshold, hardware identik), namun analisis hanya deskriptif tanpa uji statistik inferensial untuk klaim "signifikan" | 2 |
 ```
 
 ---
@@ -88,15 +88,15 @@ Rubrik Self-Assessment:
 
 Kumpulkan hasil dari WS-02 sampai WS-07 menjadi satu ringkasan proposal.
 
-| Komponen | Sumber | Isi (1-2 kalimat) |
+| Komponen | Sumber | Isi (1–2 kalimat) |
 |----------|--------|-------------------|
-| Problem Statement | WS-02 | *Contoh: Sistem rekomendasi memiliki akurasi tinggi (RMSE 0.87) tetapi satisfaction score rendah (45/100). Gap antara metrik teknis dan kepuasan pengguna belum diteliti.* |
-| Gap | WS-03 | *Contoh: Tidak ada studi yang mengintegrasikan collaborative filtering dengan user-context signals untuk meningkatkan satisfaction.* |
-| RQ | WS-04 | *Contoh: Apakah penambahan context-aware signals pada collaborative filtering meningkatkan satisfaction score tanpa menurunkan RMSE?* |
-| Hipotesis | WS-04 | *Contoh: H₁: Sistem CF+context menghasilkan satisfaction ≥ 70/100 dengan RMSE ≤ 0.90 dibanding baseline CF murni.* |
-| Variabel & Metrik | WS-05 | *Contoh: IV = jenis sistem (CF vs CF+context); DV = satisfaction score (skala 0-100) + RMSE (regresi).* |
-| Sistem | WS-06 | |
-| Desain Eksperimen | WS-07 | |
+| Problem Statement | WS-02 | Sistem lift konvensional tidak mampu mendeteksi jumlah penumpang secara otomatis, padahal diperlukan pembatasan kapasitas lift. Oleh karena itu dibutuhkan sistem berbasis CCTV untuk mendeteksi dan menghitung manusia secara otomatis. |
+| Gap | WS-03 | Penelitian sebelumnya telah menggunakan YOLOv2 dan YOLOv3 untuk deteksi manusia di lift, namun belum melakukan perbandingan komprehensif dengan dataset, threshold, dan kondisi pengujian yang identik serta metrik evaluasi yang lengkap. |
+| RQ | WS-04 | Bagaimana perbandingan performa YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia pada rekaman CCTV lift berdasarkan confidence, akurasi deteksi, dan waktu komputasi? |
+| Hipotesis | WS-04 | H₁: Terdapat perbedaan signifikan performa antara YOLOv2 dan YOLOv3 berdasarkan confidence, precision, recall, F1-score, dan waktu komputasi pada deteksi manusia menggunakan CCTV. |
+| Variabel & Metrik | WS-05 | IV = jenis model YOLO (YOLOv2 vs YOLOv3). DV = confidence, jumlah objek terdeteksi, dan waktu komputasi. Metrik evaluasi meliputi Precision, Recall, F1-Score, IoU, dan Confidence rata-rata. |
+| Sistem | WS-06 | Sistem menggunakan Darknet, Google Colab GPU, Python + OpenCV, LabelImg, Google Drive, timer Python, dan spreadsheet pencatatan metrik untuk proses training, inference, dan evaluasi. |
+| Desain Eksperimen | WS-07 | Eksperimen komparatif terkontrol menggunakan dataset yang sama (150 citra dan 10 video CCTV lift), threshold 0,30, perangkat keras identik, serta tiga skenario kepadatan (rendah, sedang, tinggi). |
 
 ---
 
@@ -105,20 +105,21 @@ Kumpulkan hasil dari WS-02 sampai WS-07 menjadi satu ringkasan proposal.
 Verifikasi 6 koneksi kritis. Isi dengan merujuk tabel di Latihan 1.
 
 | Koneksi | Status | Bukti |
-|---------|--------|-------|
-| Problem → Gap | *Contoh: ✅ — gap muncul dari 15 paper Bab 3 yang tidak ada yang mengkombinasikan CF + context untuk satisfaction* | |
-| Gap → RQ | *Contoh: ✅ — RQ langsung menanyakan apakah CF+context meningkatkan satisfaction* | |
-| RQ → Hypothesis | *Contoh: ✅ — H₁ memprediksi satisfaction ≥ 70 dengan threshold RMSE ≤ 0.90* | |
-| Hypothesis → Metric | | |
-| Metric → System | | |
-| System → Experiment | | |
+|----------|---------|---------|
+| Problem → Gap | ✅ | Gap muncul langsung dari analisis literatur terhadap masalah. Penelitian Pamungkas et al. (2021) telah menggunakan YOLOv2 dan YOLOv3 untuk deteksi manusia di lift, namun belum melakukan perbandingan komprehensif dengan dataset, threshold, dan kondisi pengujian yang identik serta belum melaporkan metrik evaluasi lengkap seperti precision, recall, dan F1-score. |
+| Gap → RQ | ✅ | RQ utama secara langsung menjawab gap yang ditemukan, yaitu membandingkan performa YOLOv2 dan YOLOv3 pada deteksi dan penghitungan manusia menggunakan CCTV lift berdasarkan confidence, akurasi deteksi, dan waktu komputasi. |
+| RQ → Hypothesis | ✅ | H₁ memprediksi adanya perbedaan signifikan performa antara YOLOv2 dan YOLOv3 berdasarkan confidence, precision, recall, F1-score, dan waktu komputasi. H₀ menyatakan tidak terdapat perbedaan signifikan sehingga kemungkinan hasil tidak sesuai prediksi tetap diakomodasi. |
+| Hypothesis → Metric | ✅ | Seluruh variabel dalam hipotesis memiliki metrik yang terdefinisi. Confidence diukur menggunakan nilai confidence rata-rata (0–1), akurasi deteksi diukur menggunakan precision, recall, F1-score, dan IoU, sedangkan efisiensi model diukur menggunakan waktu proses dalam satuan detik. |
+| Metric → System | ✅ | Setiap metrik dapat dihasilkan dan diukur oleh komponen sistem. Darknet menghasilkan nilai confidence dan hasil deteksi objek, LabelImg menyediakan ground truth untuk perhitungan precision, recall, F1-score, dan IoU, sedangkan timer Python digunakan untuk mengukur waktu komputasi. |
+| System → Experiment | ✅ | Sistem digunakan secara langsung dalam desain eksperimen. YOLOv2 dan YOLOv3 dijalankan menggunakan Darknet pada Google Colaboratory GPU dengan dataset yang sama (150 citra dan 10 video), threshold identik (0,30), serta tiga skenario kepadatan (rendah, sedang, tinggi) sehingga hasil kedua model dapat dibandingkan secara adil. |
 
-**Koneksi mana yang paling lemah?** _______________________
+**Koneksi mana yang paling lemah?** Hypothesis → Metric,  karena hipotesis menyatakan adanya perbedaan signifikan antara YOLOv2 dan YOLOv3, sedangkan metrik yang direncanakan hanya dianalisis menggunakan statistik deskriptif. Belum dijelaskan metode statistik inferensial yang digunakan untuk membuktikan apakah perbedaan tersebut benar-benar signifikan.
+
 **Bagaimana cara memperkuatnya?**
-> ___________________________________________________
+> Tambahkan metode uji statistik inferensial, seperti independent t-test atau Mann-Whitney test, untuk membandingkan nilai confidence, precision, recall, F1-score, IoU, dan waktu komputasi antara YOLOv2 dan YOLOv3. Dengan demikian, keputusan menerima atau menolak H₀ dapat didasarkan pada bukti statistik yang jelas.
 
-**Konsistensi horizontal — apakah istilah dan scope konsisten?** [ ] Ya / [ ] Tidak
-> Jika tidak, di bagian mana terjadi inkonsistensi? _________
+**Konsistensi horizontal — apakah istilah dan scope konsisten?** [✅] Ya / [ ] Tidak
+> Seluruh istilah utama digunakan secara konsisten dari Problem Statement hingga Desain Eksperimen. Variabel yang diteliti tetap sama, yaitu perbandingan YOLOv2 dan YOLOv3 untuk deteksi dan penghitungan manusia pada rekaman CCTV lift. Metrik yang digunakan (confidence, precision, recall, F1-score, IoU, dan waktu komputasi) juga konsisten muncul pada RQ, hipotesis, variabel dan metrik, sistem, serta desain eksperimen. Scope penelitian tetap berfokus pada deteksi manusia pada CCTV lift dan tidak berubah ke konteks atau objek lain.
 
 ---
 
@@ -127,16 +128,16 @@ Verifikasi 6 koneksi kritis. Isi dengan merujuk tabel di Latihan 1.
 Evaluasi proposal mini menggunakan rubrik.
 
 | Kriteria | Skor (1-3) | Justifikasi |
-|----------|-----------|-------------|
-| Koherensi | *Contoh: 2 — koneksi gap→RQ masih lemah karena gap belum cukup narrow* | |
-| Specificity | *Contoh: 3 — metrik (satisfaction 0-100, RMSE) sudah terdefinisi numerik* | |
-| Feasibility | | |
-| Rigor | | |
+|-----------|-----------|-------------|
+| Koherensi | 3 | Alur proposal sudah runtut mulai dari identifikasi masalah, gap penelitian, research question, hipotesis, metrik, sistem, hingga desain eksperimen. Setiap bagian saling mendukung dan tidak terdapat perubahan fokus penelitian. |
+| Specificity | 3 | Variabel, metrik, dataset, threshold, jumlah sampel, serta skenario pengujian telah dijelaskan secara spesifik dan terukur sehingga prosedur penelitian dapat direplikasi. |
+| Feasibility | 2 | Kebutuhan dataset, perangkat lunak, dan lingkungan komputasi sudah teridentifikasi dengan jelas. Namun, jadwal penelitian selama tujuh minggu cukup padat karena mencakup proses persiapan data, konfigurasi model, pengujian, analisis, dan penyusunan laporan. |
+| Rigor | 2 | Penelitian telah mengontrol beberapa variabel penting seperti dataset, threshold, dan perangkat keras agar perbandingan kedua model berlangsung adil. Namun, analisis yang direncanakan masih terbatas pada statistik deskriptif sehingga belum sepenuhnya mendukung pengujian signifikansi hipotesis. |
 
-**Skor total:** _____ / 12
+**Skor total:** 10 / 12
 
-**Apakah proposal siap untuk fase eksekusi?** [ ] Ya / [ ] Belum
-> Jika belum, apa yang perlu diperbaiki? __________________
+**Apakah proposal siap untuk fase eksekusi?** [✅] Ya / [ ] Belum
+> Proposal sudah memiliki tujuan, variabel, metrik, sistem, dan desain eksperimen yang jelas. Sebelum implementasi, akan lebih baik jika ditambahkan metode uji statistik inferensial untuk memperkuat proses pengambilan kesimpulan terhadap hipotesis penelitian.
 
 ---
 
@@ -144,8 +145,11 @@ Evaluasi proposal mini menggunakan rubrik.
 
 > Dari seluruh proses WS-01 sampai WS-08, bagian mana yang paling mudah dan paling sulit? Mengapa? Apa yang akan dilakukan berbeda jika mengulang dari awal?
 
-**Bagian termudah:** ____________________________________
-**Bagian tersulit:** ____________________________________
+**Bagian termudah:** Menentukan topik dan merumuskan problem statement karena masalah yang diangkat memiliki konteks yang jelas serta didukung oleh penelitian sebelumnya mengenai deteksi manusia menggunakan YOLO pada CCTV lift.
+
+**Bagian tersulit:** Menyusun gap penelitian dan menghubungkannya dengan research question, hipotesis, serta desain eksperimen. Bagian ini membutuhkan analisis literatur yang lebih teliti agar setiap komponen proposal saling terhubung dan tidak keluar dari fokus penelitian.
+
 **Yang akan dilakukan berbeda:**
-> ___________________________________________________
-> ___________________________________________________
+> Jika mengulang dari awal, saya akan mengumpulkan dan memetakan referensi penelitian terlebih dahulu sebelum menyusun research question dan hipotesis agar proses identifikasi gap menjadi lebih terarah.
+
+> Saya juga akan mulai menyusun rancangan eksperimen sejak awal sehingga penentuan variabel, metrik, dan kebutuhan data dapat disesuaikan dengan tujuan penelitian secara lebih konsisten.
