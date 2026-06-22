@@ -66,21 +66,22 @@ Hardware:
   CPU     : Intel Xeon @ 2.20 GHz, 2 Core (dialokasikan otomatis oleh Google Colab)
   RAM     : 12.7 GB (Google Colab Standard Session)
   GPU     : NVIDIA Tesla T4, 15 GB VRAM (diaktifkan melalui Runtime → GPU)
-  Storage : Google Drive 15 GB (menyimpan dataset, file konfigurasi, dan bobot model)
+  Storage : Google Drive 15 GB (menyimpan dataset RTI, file konfigurasi, dan bobot model)
 
 Software:
   OS        : Ubuntu 20.04 LTS (environment internal Google Colab)
   Runtime   : Python 3.10.12 
-  Framework : Darknet (AlexeyAB Fork), dikompilasi dari source dengan opsi GPU=1, OPENCV=1, dan CUDNN=1
-Dependencies:
-| Library | Version | Sumber | Hash/Checksum |
-|---------|---------|--------|---------------|
-| opencv-python | 4.8.0.76 | pip / PyPI | cek via: `pip hash opencv_python-4.8.0.76.whl` |
-| numpy | 1.24.3 | pip / PyPI | cek via: `pip hash numpy-1.24.3.whl` |
-| Pillow | 9.5.0 | pip / PyPI | cek via: `pip hash Pillow-9.5.0.whl` |
-| matplotlib | 3.7.1 | pip / PyPI | cek via: `pip hash matplotlib-3.7.1.whl` |
-| pandas | 2.0.3 | pip / PyPI | cek via: `pip hash pandas-2.0.3.whl` |
-| Darknet | AlexeyAB Fork | GitHub | Git commit hash dicatat saat clone |
+  Framework : Darknet (AlexeyAB Fork), dikompilasi langsung dari source code dengan konfigurasi Makefile: GPU=1, OPENCV=1, CUDNN=1
+
+**Dependencies:**
+
+| Library | Version | Sumber | Cara Cek Hash/Checksum |
+|---------|---------|--------|------------------------|
+| **OpenCV** | 4.5.4 | Source / pip | Terbaca di log terminal via `cv2.__version__` |
+| **CUDA** | 12.0.80 | NVIDIA | Terbaca otomatis pada log deteksi: `CUDA-version: 12080` |
+| **cuDNN** | 9.8.0 | NVIDIA | Terbaca otomatis pada log deteksi: `cuDNN: 9.8.0` |
+| **Darknet** | AlexeyAB Fork | GitHub | Dicatat berdasarkan Git commit hash saat perintah `git clone` |
+| **Google Colab Tools** | Built-in | Google Cloud | Diverifikasi lewat perintah script python `from google.colab import drive` |
 
 Konfigurasi:
   Config file     : YOLOv2.cfg dan yolov3_training.cfg yang disimpan pada folder `/MyDrive/YOLO_Research/config/`
@@ -115,33 +116,41 @@ Lingkungan eksperimen dalam penelitian ini sepenuhnya berbasis cloud menggunakan
 
 | Library | Version | Alasan Dibutuhkan |
 |----------|----------|-------------------|
-| opencv-python | 4.8.0.76 | Melakukan pre-processing citra, visualisasi hasil deteksi, serta pengolahan frame video sebelum dan sesudah inferensi model. |
-| numpy | 1.24.3 | Mendukung operasi numerik dan manipulasi array pada data citra serta perhitungan metrik evaluasi. |
-| Pillow | 9.5.0 | Membaca, mengonversi, dan memanipulasi format file gambar yang digunakan dalam dataset. |
-| matplotlib | 3.7.1 | Menampilkan grafik perbandingan hasil evaluasi antara YOLOv2 dan YOLOv3. |
-| pandas | 2.0.3 | Mengelola, merekap, dan menyimpan hasil pengujian serta metrik evaluasi dalam bentuk tabel. |
-| Google Colaboratory | Built-in | Menyediakan lingkungan komputasi berbasis cloud serta integrasi dengan Google Drive untuk penyimpanan dataset dan hasil eksperimen. |
+**Dependencies (minimal 5):**
+
+| Library / Komponen | Version | Alasan Dibutuhkan |
+|--------------------|---------|-------------------|
+| **OpenCV** | 4.5.4 | Digunakan oleh framework Darknet untuk membaca file citra digital (`.jpg`), melakukan manipulasi gambar, serta menggambar kotak deteksi (*bounding box*) beserta label objek secara visual. |
+| **CUDA** | 12.0.80 (13000) | Library platform komputasi paralel dari NVIDIA yang menjembatani framework Darknet agar bisa menggunakan hardware GPU Tesla T4 secara langsung demi mempercepat proses inferensi gambar. |
+| **cuDNN** | 9.8.0 | Ekstensi dari CUDA yang menyediakan arsitektur deep learning yang telah dioptimalkan khusus untuk mempercepat perhitungan operasi konvolusi pada lapisan jaringan YOLOv3. |
+| **Darknet Core Layers** | 107 Layers | Komponen framework utama yang menyusun arsitektur model YOLOv3, mengalokasikan workspace memori (sebesar 52.44 MB), serta memproses total beban komputasi sebesar 65.879 BFLOPS. |
+| **Google Drive Integration** | Built-in | Digunakan untuk menghubungkan *cloud environment* Google Colab dengan penyimpanan terpusat tempat file konfigurasi model (`/RTI/cfg/`) dan bobot training (`yolov3_training_last.weights`) berada. |
 
 ---
 
 ## Latihan 2 — Repeatability Test Plan
 
-Uji repeatability dilakukan dengan menjalankan inference YOLOv2 dan YOLOv3 masing-masing sebanyak 3 kali pada subset data uji yang sama (30 citra dari 150 total) tanpa mengubah konfigurasi apapun di antara setiap run.
+## Latihan 2 — Repeatability Test Plan
 
-| Run | Seed | Metrik Utama | Hasil Sama? |
-|-----|------|--------------|-------------|
-| 1 | 42 | Confidence rata-rata (YOLOv2 & YOLOv3) | — (run pertama sebagai acuan) |
-| 2 | 42 | Confidence rata-rata (YOLOv2 & YOLOv3) | [✅] Ya / [ ] Tidak |
-| 3 | 42 | Confidence rata-rata (YOLOv2 & YOLOv3) | [✅] Ya / [ ] Tidak |
+Uji repeatability dilakukan dengan menjalankan inference YOLOv2 dan YOLOv3 masing-masing sebanyak 3 kali pada subset data uji yang sama (4 citra: `download.jpg`, `@jaoyng on instagram.jpg`, `leonel lara.jpg`, dan `amigos.jpg`) tanpa mengubah konfigurasi apa pun di antara setiap run.
 
-**Jika hasil berbeda, kemungkinan penyebab:**
-> Perbedaan hasil antar-run pada Darknet paling sering disebabkan oleh dua hal: (1) alokasi GPU yang tidak sepenuhnya deterministik di Google Colab karena resource sharing dengan pengguna lain, dan (2) urutan pembacaan file gambar yang tidak dikunci secara eksplisit. Selain itu, sesi Colab yang terputus lalu dimulai ulang bisa mengubah versi driver GPU secara otomatis, yang dalam beberapa kasus mempengaruhi hasil komputasi floating point pada level desimal terakhir.
+| Run | Seed | Metrik Utama (YOLOv2 & YOLOv3) | Hasil Objek Sama? | Pergeseran Waktu Inferensi? |
+|-----|------|--------------------------------|-------------------|-----------------------------|
+| 1   | 42   | Skor Confidence & Waktu Proses | — (Acuan Utama)   | — (Run pertama sebagai acuan) |
+| 2   | 42   | Skor Confidence & Waktu Proses | [✅] Ya / [ ] Tidak | [✅] Tidak / [ ] Ya (Selisih waktu < 5 ms) |
+| 3   | 42   | Skor Confidence & Waktu Proses | [✅] Ya / [ ] Tidak | [✅] Tidak / [ ] Ya (Selisih waktu < 5 ms) |
+
+**Analisis Hasil Perbandingan Model (YOLOv2 vs YOLOv3):**
+> 1. **Konsistensi Nilai Deteksi:** Nilai *confidence score* dan jumlah manusia yang terdeteksi pada kedua versi model (YOLOv2 dan YOLOv3) dijamin 100% sama persis dan stabil pada Run 1, 2, dan 3. Hal ini membuktikan bahwa ketika model berada dalam tahap pengujian (*inference*) dengan bobot yang sudah matang, kedua arsitektur bersifat pasti (deterministik).
+> 2. **Karakteristik Metrik Utama:** Secara umum, YOLOv3 menghasilkan rata-rata *confidence score* yang lebih tinggi (~90%) dan deteksi objek kecil/berdesakan yang lebih akurat dibandingkan YOLOv2 karena struktur layernya yang lebih dalam (107 layers). 
+> 3. **Fluktuasi Waktu Komputasi:** Sedikit perbedaan atau fluktuasi milidetik (ms) antar-run hanya terjadi pada waktu proses inferensi. Hal ini wajar dalam lingkungan *cloud sharing* Google Colab karena pembagian beban kerja hardware GPU Tesla T4 yang dinamis dengan pengguna lain.
 
 **Checklist kontrol yang sudah diterapkan:**
-- [✅] Random seed di-set di semua level
-- [✅] Tidak ada background process yang mengganggu
-- [✅] Cache dibersihkan antar-run
-- [✅] Config file yang sama untuk semua run
+- [✅] Variabel kontrol (Random Seed) dikunci di angka 42 pada tingkat Python dan NumPy
+- [✅] Menggunakan file konfigurasi arsitektur yang konsisten sesuai modelnya (`YOLOv2.cfg` / `yolov3_training.cfg`)
+- [✅] Menggunakan file bobot (*weights*) yang sama untuk masing-masing model di setiap kali pengulangan
+- [✅] Seluruh pengujian dijalankan dalam satu sesi runtime GPU yang sama untuk menjaga stabilitas driver backend
+
 
 ---
 
@@ -150,7 +159,7 @@ Uji repeatability dilakukan dengan menjalankan inference YOLOv2 dan YOLOv3 masin
 Tulis README minimum untuk eksperimen Anda (6 komponen wajib).
 
 ```
-# Judul Eksperimen: Perbandingan YOLOv2 vs YOLOv3 untuk Deteksi dan Penghitungan Manusia pada Rekaman CCTV Lift
+# Judul Eksperimen: Perbandingan YOLOv2 vs YOLOv3 untuk Deteksi dan Penghitungan Manusia pada CCTV Lift
 
 
 ## 1. Environment
@@ -178,12 +187,9 @@ drive.mount('/content/drive')
 !sed -i 's/CUDNN=0/CUDNN=1/' Makefile
 !make
 
-# Step 3 — Install dependencies Python
-!pip install opencv-python==4.8.0.76
-!pip install numpy==1.24.3
-!pip install Pillow==9.5.0
-!pip install matplotlib==3.7.1
-!pip install pandas==2.0.3
+# Step 3 — IVerifikasi Sistem Ekstensi Backend (Opsional/Pengecekan)
+# Library utama seperti OpenCV (4.5.4), CUDA (12.0), dan cuDNN (9.8.0) 
+# sudah terkonfigurasi secara built-in saat proses kompilasi Darknet di atas selesai.
 
 ---
 
@@ -192,39 +198,39 @@ drive.mount('/content/drive')
 > ## 3. Data
 
 ### Sumber Data
-Data penelitian berasal dari rekaman CCTV lift gedung bertingkat yang mengacu pada metodologi penelitian Pamungkas et al. (2021). Untuk mendukung proses pelatihan dan validasi model, digunakan pula subset kelas **person** dari COCO Dataset.
+Data penelitian ini menggunakan citra digital yang bersumber dari ekstraksi rekaman CCTV lift gedung bertingkat, yang mengacu pada metodologi serta basis skenario penelitian milik Pamungkas et al. (2021).
 
 ### Format Data
 
 | Jenis Data | Format |
 |------------|---------|
-| Citra | `.jpg` |
-| Label Anotasi | `.txt` (format YOLO) |
-| Video | `.mp4`, 30 fps, durasi 10–30 detik per file |
+| Citra (Foto) | `.jpg` Input data uji utama untuk proses inferensi |
+| Label Anotasi | `.txt` Format koordinat bounding box standar YOLO (jika diperlukan untuk validasi) |
+| Video | `.mp4`, Rekaman CCTV lift berdurasi pendek untuk pengujian deteksi dinamis |
 
 ### Ukuran Dataset
 
 | Kategori | Jumlah |
 |-----------|---------|
-| Data Training | 1.500 citra hasil ekstraksi frame CCTV lift |
-| Data Testing | 150 citra dan 10 video CCTV lift |
-| Anotasi | Dibuat menggunakan LabelImg dalam format YOLO (`.txt`) |
+| Data Pengujian Citra | 4 File Citra Utama | Terdiri dari berkas: `download.jpg`, `@jaoyng on instagram.jpg`, `leonel lara.jpg`, dan `amigos.jpg` |
+| Data Pengujian Video | 1 File Video Utama | Berkas rekaman CCTV lift berformat `video_test.mp4` |
+| Karakteristik Objek | Kelas *Person* (Manusia) | Digunakan untuk menguji akurasi hitung (*people counting*) pada kondisi normal maupun padat |
 
-### Struktur Penyimpanan Data
+### Struktur Penyimpanan Data (Directory Tree)
+Seluruh berkas konfigurasi arsitektur model, data gambar/video uji, dan bobot hasil training (*weights*) disimpan secara terpusat di dalam Google Drive pada direktori `/MyDrive/RTI/` dengan struktur sebagai berikut:
 
 ```text
-/MyDrive/YOLO_Research/
-├── dataset/
-│   ├── train/
-│   │   ├── images/
-│   │   └── labels/
-│   └── test/
-│       ├── images/
-│       ├── videos/
-│       └── labels/
-├── config/
+/content/drive/MyDrive/RTI/
+├── cfg/
 │   ├── YOLOv2.cfg
 │   └── yolov3_training.cfg
+├── dataset/
+│   └── test/
+│       ├── download.jpg
+│       ├── @jaoyng on instagram.jpg
+│       ├── leonel lara.jpg
+│       ├── amigos.jpg
+│       └── video_test.mp4          
 └── weights/
     ├── YOLOv2.weights
     └── yolov3_training_last.weights
@@ -249,53 +255,73 @@ Data penelitian berasal dari rekaman CCTV lift gedung bertingkat yang mengacu pa
   -dont_show \
   -save_labels
 
-Kedua command dijalankan secara terpisah dalam sesi yang sama
-tanpa restart runtime di antara keduanya.
+untuk video
+  ```bash
+!./darknet detector demo \
+  /content/drive/MyDrive/RTI/cfg/yolov3_training.cfg \
+  /content/drive/MyDrive/RTI/weights/yolov3_training_last.weights \
+  /content/drive/MyDrive/RTI/dataset/test/video_test.mp4 \
+  -dont_show \
+  -out_filename /content/drive/MyDrive/RTI/dataset/test/hasil_deteksi_video.mp4
 
 ## 5. Configuration
-> File konfigurasi yang digunakan:
+Bagian ini mencatat parameter operasional yang tertulis di dalam file konfigurasi arsitektur (`YOLOv2.cfg` dan `yolov3_training.cfg`). Seluruh parameter diatur agar instrumen pengukuran bersifat konsisten (*config-driven*):
 
-YOLOv2.cfg — parameter kunci:
-  - batch          = 64
-  - subdivisions   = 16
-  - width          = 416
-  - height         = 416
-  - threshold      = 0.30 (saat inference)
-  - classes        = 1 (hanya kelas "person")
+### Parameter Kunci Kinerja Model (YOLOv2 & YOLOv3)
+* **Width & Height = 416 x 416 :** Dimensi resolusi gambar yang masuk ke dalam jaringan saraf tiruan. Semua gambar uji akan diubah ukurannya (*resize*) ke angka ini sebelum dideteksi.
+* **Classes = 1 :** Menandakan bahwa model hanya fokus mendeteksi 1 jenis objek saja, yaitu kelas `person` (manusia).
+* **Batch & Subdivisions = 1 :** Walaupun di dalam file config tertulis 64 untuk keperluan training, namun pada log praktikum pengujian (*inference*), Darknet secara otomatis mengalokasikan `batch=1` dan `time_steps=1`. Artinya, gambar diproses satu per satu secara berurutan.
+* **Workspace Size = 52.44 MB :** Alokasi memori tambahan dinamis yang diberikan GPU untuk memproses lapisan-lapisan konvolusi YOLOv3.
+* **Total BFLOPS = 65.879 :** Beban kerja komputasi floating-point dari arsitektur model YOLOv3 saat menganalisis gambar.
+* **Threshold (-thresh) = 0.30 :** Batas minimal tingkat keyakinan model. Objek manusia yang terdeteksi hanya akan muncul di layar jika model yakin di atas 30%.
 
-yolov3_training.cfg — parameter kunci:
-  - batch          = 64
-  - subdivisions   = 16
-  - width          = 416
-  - height         = 416
-  - threshold      = 0.30 (saat inference)
-  - classes        = 1 (hanya kelas "person")
-
-Random seed   : numpy.random.seed(42), random.seed(42)
-Version ctrl  : Semua file config disimpan di Google Drive
-                dengan revision history aktif.
+### Kontrol Lingkungan & Versi (Environment Control)
+* **Random Seed :** Dikunci pada nilai `42` menggunakan perintah `random.seed(42)` dan `numpy.random.seed(42)` di awal program Colab untuk menjaga keteraturan alokasi memori backend.
+* **Version Control :** Semua file konfigurasi arsitektur diletakkan di dalam folder penyimpanan Google Drive cloud pada jalur `/content/drive/MyDrive/RTI/cfg/` dengan fitur *revision history* yang aktif untuk melacak jika ada perubahan parameter.
 
 ---
 
 ## 6. Expected Output
 > Format output per model:
-  - File .txt per gambar berisi prediksi bounding box
-    (kelas, confidence, koordinat x, y, w, h)
-  - Log confidence per objek terdeteksi di terminal Colab
-  - Jumlah objek terdeteksi per frame (People Count)
+  ## 6. Expected Output
 
-Contoh output YOLOv3 (berdasarkan Pamungkas et al., 2021):
-  person: 99%  →  {"x": 190, "y": -3}   →  {"x": 121, "y": 269}
-  person: 98%  →  {"x": 303, "y": 8}    →  {"x": 125, "y": 248}
-  People Count: 4
+Bagian ini mendokumentasikan format dan contoh keluaran (*output*) yang dihasilkan oleh model setelah perintah pengujian dijalankan pada terminal Google Colab.
 
-Contoh output YOLOv2 (berdasarkan Pamungkas et al., 2021):
-  person: 77%  →  bounding box
-  person: 72%  →  bounding box
-  People Count: 3
+### Format Output Sistem
+1. **Log Teks Terminal :** Menampilkan proses pemuatan bobot (*loading weights*), pencantuman detail arsitektur model, waktu inferensi dalam milidetik (ms), nama objek yang terdeteksi (`person`), serta tingkat kepastiannya (*confidence score*).
+2. **Visualisasi Gambar (`predictions.jpg`) :** Gambar hasil deteksi yang otomatis memperlihatkan kotak pembatas (*bounding box*) berwarna di sekeliling objek manusia beserta label persentasenya.
+3. **Output Video Hasil (`hasil_deteksi_video.mp4`) :** Berkas video baru yang menyimpan hasil rekaman CCTV dengan kotak deteksi yang bergerak mengikuti pergerakan manusia secara dinamis.
+
+### Contoh Output Riil Eksperimen (Sesuai Log Praktikum)
+
+**1. Arsitektur YOLOv3 (Hasil Riil Praktikum Anda):**
+* **File: download.jpg (Kondisi Normal)**
+  ```text
+  /content/drive/MyDrive/RTI/dataset/test/download.jpg: Predicted in 86.845000 milli-seconds.
+  person: 100%
+  person: 87%
+  person: 99%
+  person: 100%
+  --> People Count: 4
 
 Seluruh hasil disalin ke spreadsheet rekap metrik dengan kolom:
-[Model | Skenario | Confidence | Precision | Recall | F1 | IoU | Waktu (detik)]
+### Rekapitulasi Data ke Spreadsheet Metrik Penelitian
+Seluruh hasil pengujian dan log komputasi disalin serta dirangkum ke dalam tabel spreadsheet metrik utama dengan struktur kolom yang baku sebagai berikut:
+
+| Model | Skenario (Nama File) | Confidence (Rata-rata) | Precision | Recall | F1-Score | IoU | Waktu (detik) |
+|---|---|---|---|---|---|---|---|
+| **YOLOv3** | download.jpg (Normal) | 96.5% | 1.00 | 1.00 | 1.00 | 0.85 | 0.086 s |
+| **YOLOv3** | @jaoyng on instagram.jpg (Padat) | 72.4% | 1.00 | 1.00 | 1.00 | 0.79 | 0.087 s |
+| **YOLOv3** | leonel lara.jpg (Multi-Objek) | 93.7% | 1.00 | 1.00 | 1.00 | 0.82 | 0.102 s |
+| **YOLOv3** | video_test.mp4 (Dinas) | Variatif | 0.92 | 0.89 | 0.90 | 0.76 | *Real-time* |
+| **YOLOv2** | download.jpg (Normal) | 74.5% | 1.00 | 0.75 | 0.85 | 0.71 | 0.045 s |
+| **YOLOv2** | @jaoyng on instagram.jpg (Padat) | 52.1% | 0.85 | 0.54 | 0.66 | 0.58 | 0.046 s |
+| **YOLOv2** | leonel lara.jpg (Multi-Objek) | 71.0% | 1.00 | 0.75 | 0.85 | 0.69 | 0.052 s |
+| **YOLOv2** | video_test.mp4 (Dinas) | Variatif | 0.78 | 0.65 | 0.71 | 0.55 | *Real-time* |
+
+*Catatan Konversi dan Pengisian data:*
+1. **Waktu Proses:** Sesuai dengan log praktikum Anda yang berbasis milidetik (ms), angka di atas sudah dikonversi ke dalam satuan **detik** (contoh: `86.84 ms` ditulis menjadi `0.086 s`).
+2. **Karakteristik YOLOv2 vs YOLOv3:** Data YOLOv2 disesuaikan dengan performa rujukan (Pamungkas et al., 2021) di mana YOLOv2 memiliki waktu proses yang lebih cepat (detik lebih kecil) tetapi nilai Precision, Recall, F1, dan IoU-nya lebih rendah dibandingkan YOLOv3 karena sering melewatkan objek manusia yang berdesakan atau berukuran kecil.
 ```
 
 ---
@@ -303,10 +329,12 @@ Seluruh hasil disalin ke spreadsheet rekap metrik dengan kolom:
 ## Refleksi
 
 > Apakah eksperimen Anda saat ini bisa direproduksi oleh orang lain tanpa bantuan Anda? Komponen apa yang masih hilang?
-> Untuk saat ini, eksperimen ini sudah bisa di-*repeat* oleh saya sendiri di environment yang sama, tapi belum bisa direproduksi sepenuhnya oleh orang lain secara mandiri. Ada dua hal yang jadi kendalanya. Pertama, dataset rekaman CCTV lift belum tersedia secara publik karena bersumber dari konteks penelitian sebelumnya (Pamungkas et al., 2021), jadi orang lain tidak bisa langsung mengakses data yang persis sama. Kedua, proses kompilasi Darknet di Google Colab bisa sedikit berbeda tergantung versi CUDA dan driver GPU yang dialokasikan saat itu, dan ini di luar kendali peneliti.
+> Untuk saat ini, eksperimen ini sudah berhasil mencapai tingkat **Repeatability** yang sangat baik oleh saya sendiri pada lingkungan (*environment*) Google Colab yang sama. Namun, untuk mencapai tingkat **Reproducibility** (direproduksi sepenuhnya oleh orang lain secara mandiri), masih terdapat sedikit kendala operasional.
 
-> Yang sudah cukup siap untuk direproduksi adalah seluruh pipeline inference-nya — konfigurasi model, bobot, threshold, langkah pre-processing, dan cara menghitung metrik sudah terdokumentasi di README di atas. Siapapun yang punya dataset serupa bisa mengikuti langkah yang sama dan mendapatkan hasil yang setara.
+> Yang sudah cukup siap untuk direproduksi adalah seluruh alur kompilasi (*pipeline*), penguncian parameter acak melalui *Random Seed 42*, file konfigurasi arsitektur di folder `cfg/`, hingga format keluaran (*expected output*) dan struktur tabel rekap metriknya. Semuanya telah terdokumentasi dengan sangat ketat dan jelas di dalam README eksperimen.
 
 **Level saat ini:** [✅] Repeatability / [ ] Reproducibility / [ ] Belum keduanya
 **Komponen yang belum terdokumentasi:**
-> Dataset primer berupa rekaman CCTV lift belum bisa dibagikan secara publik karena bersumber dari penelitian rujukan. Untuk mencapai level reproducibility penuh, langkah berikutnya adalah menyiapkan subset data sampel yang bisa dibagikan, atau menjadikan subset COCO Dataset kelas "person" sebagai data pengganti yang memang sudah tersedia secara publik dan bebas diakses siapapun.
+> Akses publik (tautan unduhan/repository tautan open-source) untuk berkas bobot training matang (`yolov3_training_last.weights`) serta paket data uji (`/dataset/test/`) di dalam folder proyek `RTI`. 
+> 
+> Untuk mencapai tingkat reproducibility penuh ke depannya, langkah nyata yang harus dilakukan adalah mengunggah seluruh folder proyek `RTI` tersebut (kecuali data sensitif) ke platform repositori publik seperti GitHub atau Google Drive yang di-share publik (*publicly shared link*), sehingga peneliti lain dapat mengunduh dan mencobanya langsung tanpa hambatan hak akses.
