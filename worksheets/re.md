@@ -1,65 +1,10 @@
 # WS-10: Experiment Execution & Data Collection
 
-> **Bab 10 — Eksekusi Eksperimen & Pengumpulan Data**
-
----
-
-## Ringkasan Materi
-
-### Experiment Execution Pipeline
-
-```
-Design → Execution Plan → Controlled Execution → Data Collection → Data Logging → Dataset for Analysis
-```
-
-### Multiple Run = Non-Negotiable
-
-Single run **tidak pernah cukup** untuk klaim ilmiah. Minimum 5-10 run per skenario dengan seed berbeda. Multiple run menghasilkan:
-- Mean, std, confidence interval
-- Distribusi hasil → uji statistik
-- Variabilitas → error bar di grafik
-
-### Execution Plan
-
-Setiap eksperimen harus memiliki plan sebelum eksekusi:
-- Daftar skenario
-- Jumlah run per skenario
-- Random seed per run (pre-determined!)
-- Urutan eksekusi (randomisasi/counterbalancing)
-- Pre-execution checklist
-
-### Data Logging Komprehensif
-
-Setiap run menghasilkan log terstruktur:
-1. **Identitas** — Run ID, timestamp, skenario
-2. **Konfigurasi** — Semua parameter, seed, code version
-3. **Hasil** — Semua metrik, output detail
-4. **Metadata** — Waktu eksekusi, resource usage, warning/error
-
-Format: CSV/JSON/database — **bukan stdout yang di-copy-paste**.
-
-### Engineering vs Research Execution
-
-| Aspek | Engineering | Research |
-|-------|-----------|---------|
-| Run | Sekali (deploy) | Multiple (min 5-10, seed berbeda) |
-| Logging | Error log, access log | Semua parameter, metrik, metadata |
-| Anomali | Bug → fix → redeploy | Investigasi → dokumentasi → analisis |
-| Urutan | Tidak penting | Bisa bias — perlu randomisasi |
-
-### Anomali = Dokumentasi, Bukan Hapus
-
-Run gagal/anomali tidak boleh dihapus tanpa dokumentasi. Bisa jadi:
-- **Bug** → fix & re-run (dokumentasikan!)
-- **Batas kemampuan metode** → DNF = temuan
-- **Data yang bias** jika hanya simpan run "berhasil"
-
-### Jebakan Kognitif
-
-1. "Satu angka cukup" → tanpa distribusi, tidak bisa diuji
-2. "Seed tidak penting" → bahkan algoritma deterministik bisa dipengaruhi library stokastik
-3. "Run gagal langsung hapus" → kehilangan temuan potensial
-4. "Semua run harus hari ini" → thermal throttling, fatigue
+**Nama:** Fauzatul Farhanah
+**NIM:** 240202834
+**Kelas:** 4IKRB
+**Mata Kuliah:** Riset dan Teknologi Informasi
+**Topik Penelitian:** Analisis Perbandingan YOLOv2 dan YOLOv3 untuk Deteksi dan Penghitungan Manusia Menggunakan CCTV Lift
 
 ---
 
@@ -68,8 +13,8 @@ Run gagal/anomali tidak boleh dihapus tanpa dokumentasi. Bisa jadi:
 ```
 EXECUTION PLAN
 
-| Run # | Skenario | Seed | Parameter | Status | Waktu | Output File |
-|-------|----------|------|-----------|--------|-------|-------------|
+| Run # | Skenario                                | Seed | Parameter                                                    | Status    | Waktu       | Output File                         |
+|-------|-----------------------------------------|------|--------------------------------------------------------------|-----------|-------------|-------------------------------------|
 | 1     | YOLOv3 — Kepadatan Rendah (1–2 orang)  | 42   | cfg: yolov3_training.cfg, thresh: 0.30, input: 416x416      | Completed | 86.85 ms    | hasil_yolov3_rendah_run1.txt        |
 | 2     | YOLOv3 — Kepadatan Rendah (1–2 orang)  | 123  | cfg: yolov3_training.cfg, thresh: 0.30, input: 416x416      | Completed | 87.10 ms    | hasil_yolov3_rendah_run2.txt        |
 | 3     | YOLOv3 — Kepadatan Rendah (1–2 orang)  | 456  | cfg: yolov3_training.cfg, thresh: 0.30, input: 416x416      | Completed | 87.42 ms    | hasil_yolov3_rendah_run3.txt        |
