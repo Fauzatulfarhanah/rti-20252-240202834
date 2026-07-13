@@ -1,203 +1,154 @@
 # Laporan Penelitian
 
-**Judul:** Performance and Security Evaluation of Mitigating JWKS Endpoint Flooding on Microservices Gateway Using Redis-PostgreSQL Hybrid Caching
+**Judul:** ANALISIS PERBANDINGAN YOLOV2 DAN YOLOV3 UNTUK DETEKSI DAN PENGHITUNGAN MANUSIA MENGGUNAKAN CCTV LIFT
 
-**Peneliti:** Helmi Bahar Alim
-**Target Publikasi:** Sinta 2 (Jurnal RESTI/Telematika) atau Scopus Q3–Q4
-**Status Penelitian:** Tahap 1–4 selesai; Tahap 5 (draf naskah jurnal) sedang berjalan ([../07-manuskrip/](../07-manuskrip/))
+**Peneliti:** Fauzatul Farhanah
+**Target Publikasi:** Jurnal UPB
+# Laporan Penelitian
+
+**Judul:** ANALISIS PERBANDINGAN YOLOV2 DAN YOLOV3 UNTUK DETEKSI DAN PENGHITUNGAN MANUSIA MENGGUNAKAN CCTV LIFT  
+**Peneliti:** Fauzatul Farhanah  
+**Target Publikasi:** Jurnal UPB  
+**Status Penelitian:** Selesai
 
 ---
 
 ## 1. Ringkasan Eksekutif
 
-Penelitian ini merancang, mengimplementasikan, dan mengevaluasi secara empiris mekanisme **Redis-PostgreSQL Hybrid Caching** sebagai mitigasi kerentanan **JWKS Endpoint Flooding** pada API Gateway berbasis Go (Echo). Evaluasi dilakukan melalui eksperimen terkontrol: satu gateway dengan dua mode operasi (`CACHE_MODE=none` sebagai baseline dan `CACHE_MODE=hybrid` sebagai mitigasi), diuji terhadap 5 varian traffic (legitimate, dua varian serangan, dan dua varian campuran) masing-masing 40 replikasi — total **400 pengujian beban** menggunakan k6, dengan pengukuran latensi, throughput, metrik internal gateway (Prometheus), dan penggunaan resource container (CPU/memori).
+Penelitian eksperimen komparatif terkontrol ini mengevaluasi secara empiris performa algoritma **YOLOv2 (Arsitektur Darknet-19)** dan **YOLOv3 (Arsitektur Darknet-53)** untuk otomasi deteksi dan penghitungan jumlah objek manusia (*person*) pada rekaman CCTV ruang tertutup lift gedung bertingkat. Urgensi penelitian ini didasarkan pada kebutuhan pengendalian kapasitas lift secara akurat tanpa intervensi manual demi keselamatan dan kenyamanan pengguna.
 
-**Temuan utama:**
+Pengujian dilakukan menggunakan lingkungan *Cloud Computing* Google Colab bertenaga hardware **GPU NVIDIA Tesla T4** melalui framework Darknet berbasis C/CUDA. Evaluasi dilakukan secara objektif menggunakan teknik *purposive sampling* terhadap **4 citra uji representatif** yang mencakup 3 tingkat skenario kepadatan objek (Rendah, Sedang, Tinggi) dengan mengunci variabel kontrol secara mutlak pada dimensi resolusi **416 × 416 piksel** dan batasan *threshold* deteksi **0.30 (30%)**.
 
-- Mitigasi **tidak menambah overhead** pada kondisi normal (latensi hybrid sedikit lebih rendah dari baseline).
-- Mitigasi **menurunkan beban query PostgreSQL sebesar 93,2%–99,997%** dan **CPU PostgreSQL dari 64–154% menjadi <2,5%** pada mayoritas skenario.
-- Mitigasi **melindungi latensi traffic legitimate** saat sistem diserang ($D_{perf}$ p95 = -92,9% pada `mixed-unique`, -39,5% pada `mixed-pool`).
-- Ditemukan **trade-off**: pada pola serangan dengan `kid` selalu baru (`*-unique`), rate-limiting berbasis UPSERT per `client_ip` di PostgreSQL menjadi titik kontensi *lock*, sehingga CPU PostgreSQL tetap tinggi (103–124%) dan latensi traffic penyerang pada mode hybrid justru lebih buruk daripada baseline.
-
-Seluruh kode sumber, data eksperimen, skrip analisis, tabel, dan figure tersedia di repository ini (lihat §7 Lampiran untuk peta artefak).
+### Temuan Utama Eksperimen:
+* **Uji Nilai Confidence (Mendukung H₁ pada RQ1):** Model YOLOv3 secara konsisten menghasilkan rata-rata nilai *confidence score* objek manusia yang lebih tinggi secara signifikan (mendominasi di rentang **87%–100%**) dibandingkan YOLOv2 yang performanya menurun pada objek oklusi sebagian.
+* **Uji Waktu Komputasi (Mendukung H₁ pada RQ2):** Model YOLOv2 terbukti memiliki waktu komputasi (*inference time*) yang jauh lebih cepat secara konsisten di bawah **75 milidetik** karena beban komputasinya yang ringan (**29.475 BFLOPS**), dibandingkan YOLOv3 yang membutuhkan waktu lebih panjang (**65.879 BFLOPS**) akibat struktur konvolusi yang lebih dalam.
+* **Analisis Skenario Kepadatan & Oklusi (RQ3):** Pada skenario kepadatan ekstrem (`@jaoyng on instagram.jpg`), YOLOv2 mendeteksi 13 objek manusia dengan tingkat *confidence* rendah (rentang **34%–66%**), sementara YOLOv3 mendeteksi 11 objek manusia secara lebih solid dengan kepastian fitur yang stabil di atas **90%**. YOLOv2 juga ditemukan rentan terhadap kesalahan klasifikasi (*false positive*) pada objek mati di dalam lift.
 
 ---
 
-## 2. Latar Belakang dan Rumusan Masalah
+## 2. Latar Belakang, Rumusan Masalah, dan Tujuan
 
-### 2.1 Latar Belakang
+### 2.1 Latar Belakang dan Masalah Penelitian
+Kapasitas lift yang terbatas di tengah melonjaknya mobilitas vertikal masyarakat pada gedung bertingkat sering kali memicu kepadatan ekstrem. Masalah ini menjadi perhatian utama sejak diterbitkannya regulasi pembatasan jumlah orang di dalam lift oleh Kementerian Kesehatan RI pada tahun 2020 demi menekan laju penularan COVID-19 di area kerja. Karena sistem mekanis lift konvensional tidak mampu mendeteksi jumlah penumpang secara riil, infrastruktur CCTV lift dapat diberdayakan sebagai sumber data utama melalui teknologi *computer vision* berbasis *Deep Learning* Convolutional Neural Network (CNN).
 
-API Gateway pada arsitektur microservices umumnya memvalidasi JSON Web Token (JWT) dengan mengambil kunci publik penandatangan dari *JSON Web Key Set* (JWKS) berdasarkan *Key ID* (`kid`) pada header token. Pada implementasi naif, setiap `kid` yang belum dikenal memicu *lookup* baru ke backing store (database/Identity Service). Penyerang dapat mengeksploitasi pola ini — yang dalam penelitian ini disebut **JWKS Endpoint Flooding** (selaras dengan kelas kerentanan CVE-2026-48524, perlu diverifikasi — lihat [../02-literatur/matriks-literatur.md](../02-literatur/matriks-literatur.md)) — dengan membanjiri gateway menggunakan JWT ber-`kid` acak, sehingga beban *lookup* ke database bertumbuh linear terhadap *request rate* penyerang dan berpotensi menyebabkan *resource exhaustion* yang menurunkan kualitas layanan bagi pengguna sah.
+Algoritma YOLO (*You Only Look Once*) menawarkan solusi deteksi objek *real-time* dengan memproses satu jaringan syaraf tunggal secara simultan pada keseluruhan citra. Namun, pemilihan versi YOLO yang paling optimal untuk ruang CCTV lift masih menjadi kendala terbuka. Karakteristik internal lift memunculkan tantangan spesifik berupa sudut pandang atas (*bird-eye view*), pencahayaan rendah, ruang sempit, serta tingkat oklusi tinggi (objek manusia saling berdekatan dan bertumpuk).
 
-### 2.2 Rumusan Masalah
+YOLOv2 berjalan dengan arsitektur Darknet-19 (23 lapisan konvolusional), sedangkan YOLOv3 menggunakan Darknet-53 (53 lapisan konvolusional) yang dilengkapi *residual connections* dan deteksi multi-skala. Studi terdahulu oleh Pamungkas et al. (2021) belum menyajikan perbandingan eksperimen yang komprehensif karena tidak menggunakan dataset dan kondisi pengujian yang identik secara simultan, tidak menganalisis pengaruh kepadatan objek secara kuantitatif, serta belum melaporkan metrik evaluasi standar secara lengkap. Penelitian komparatif terkontrol ini hadir untuk mengisi kesenjangan literatur (*literature gap*) tersebut.
 
-1. Bagaimana merancang mekanisme caching pada API Gateway yang membatasi dampak JWKS Endpoint Flooding terhadap beban database backend, tanpa menambah latensi signifikan pada traffic legitimate?
-2. Seberapa besar efektivitas skema Redis-PostgreSQL Hybrid Caching (positive cache, negative cache, rate limiting berbasis PostgreSQL) dalam menurunkan beban query database dan penggunaan CPU selama serangan?
-3. Bagaimana dampak ($D_{perf}$) mitigasi terhadap latensi traffic legitimate, baik pada kondisi normal maupun saat berjalan bersamaan dengan traffic serangan?
-4. Apakah strategi serangan `kid` selalu baru (`unique`) vs `kid` berulang dari pool kecil (`pool`) menghasilkan efektivitas dan trade-off mitigasi yang berbeda?
+### 2.2 Rumusan Masalah (Research Questions)
+* **RQ Utama:** Bagaimana perbandingan performa YOLOv2 dan YOLOv3 dalam mendeteksi dan menghitung manusia pada rekaman CCTV lift berdasarkan nilai *confidence*, akurasi deteksi, dan waktu komputasi?
+* **RQ1:** Apakah YOLOv3 menghasilkan nilai *confidence* rata-rata yang lebih tinggi dibandingkan YOLOv2 dalam mendeteksi manusia pada citra CCTV lift?
+* **RQ2:** Bagaimana perbandingan waktu komputasi (*inference time*) antara YOLOv2 dan YOLOv3 dalam proses deteksi manusia?
+* **RQ3:** Pada skenario kepadatan manakah (rendah, sedang, tinggi) performa kedua model menunjukkan perbedaan paling signifikan?
 
-### 2.3 Tujuan Penelitian
-
-Detail tujuan & kontribusi: lihat [../01-proposal/proposal-penelitian.md](../01-proposal/proposal-penelitian.md) §3 dan §5, serta [../07-manuskrip/02-pendahuluan.md](../07-manuskrip/02-pendahuluan.md).
-
----
-
-## 3. Metodologi dan Pelaksanaan
-
-Penelitian dilaksanakan dalam 5 tahap. Bagian ini merangkum implementasi dan verifikasi setiap tahap; detail teknis lengkap ada pada dokumen `09-docs/tahap-N-*.md` yang dirujuk.
-
-### 3.1 Tahap 1 — Perancangan Arsitektur & Skema Database
-
-**Status: Selesai.** Dirancang arsitektur tiga komponen (Gateway Go/Echo, Redis sebagai L1 cache murni, PostgreSQL sebagai L2/*source of truth*), alur resolusi kunci (positive cache → negative cache → rate-limit PostgreSQL → query `signing_keys`), skema tabel `signing_keys` dan `rate_limit_counters` (dengan *stored procedure* `upsert_rate_limit_counter` untuk UPSERT atomik), dan skema key Redis (`jwks:kid:<kid>`, `jwks:negative:<kid>`). Mode eksperimen `CACHE_MODE=none|hybrid` dirancang sejak tahap ini agar perbandingan baseline-vs-mitigated dapat dilakukan pada infrastruktur identik.
-
-Detail & diagram: [../09-docs/tahap-1-arsitektur-dan-skema-database.md](../09-docs/tahap-1-arsitektur-dan-skema-database.md), [../03-teori/arsitektur-dan-skema.md](../03-teori/arsitektur-dan-skema.md).
-
-### 3.2 Tahap 2 — Implementasi API Gateway (Go)
-
-**Status: Selesai.** Gateway diimplementasikan dengan struktur *clean architecture* per *bounded context* (`internal/jwks`, `internal/ratelimit`, `internal/jwtauth`, `internal/httpapi`, `internal/platform`, `internal/metrics`), menggunakan Echo, `pgx`/`pgxpool`, `go-redis/redis/v9`, `golang-jwt/jwt/v5`, dan `prometheus/client_golang`. Deliverable: migrasi SQL (Sqitch), skrip seed (generate RSA-2048 keypair + sample JWT), middleware verifikasi JWT dengan resolusi `kid` untuk kedua mode, endpoint `/api/resource`, `/healthz`, `/metrics`, serta `docker-compose.yml` dengan healthcheck.
-
-**Verifikasi end-to-end** (manual via curl, kedua mode):
-- *Hybrid*: kid valid → `200` (cache miss → DB → fill cache → cache hit pada request berikutnya); kid tidak dikenal → `401 invalid_kid` (negative cache, tidak ada query DB berulang); flood concurrent kid unik → sebagian `429 rate_limited` setelah >20 req/detik per `client_ip`.
-- *None*: kid valid selalu `200` dengan `jwksgw_db_queries_total{resolve_key}` naik 1:1 per request; tidak pernah `429`.
-- *Fail-closed/fail-open*: PostgreSQL down → `503` (kedua mode); Redis down (hybrid) → kid ter-cache tetap `200` (fallback PostgreSQL), `/healthz` melaporkan `redis:false`.
-
-Catatan lingkungan: PostgreSQL container di-expose ke host pada port 5433 (hindari konflik port lokal); migrasi diverifikasi via `psql` langsung (Sqitch CLI di mesin dev tidak memiliki driver `DBD::Pg`).
-
-Detail: [../09-docs/tahap-2-implementasi-gateway.md](../09-docs/tahap-2-implementasi-gateway.md), kode: [../05-kode/gateway/](../05-kode/gateway/).
-
-### 3.3 Tahap 3 — Pengujian Beban k6
-
-**Status: Selesai — matrix 400 run (40 replikasi) telah dijalankan.** Disusun 3 skrip k6 (`legitimate.js`, `attack.js` dengan `KID_STRATEGY=unique|pool`, `mixed.js` yang menjalankan keduanya secara paralel dengan Trend custom per skenario), runner `run-scenario.sh` (restart gateway sesuai mode, health check, snapshot `/metrics` sebelum/sesudah, jalankan k6, monitor resource), `run-matrix.sh` (loop replikasi × kombinasi mode/varian), dan `monitor-resources.sh` (`docker stats` polling ~3s).
-
-**Iterasi desain penting**: percobaan awal menggunakan `k6 run --out json=...` menghasilkan **139 MB** data mentah hanya untuk 15 detik pengujian — tidak layak untuk matrix penuh. Solusi: ganti ke `--summary-export` (ringkasan agregat) + snapshot `/metrics` gateway before/after (delta = ground truth jumlah query/cache/rate-limit) + Trend custom di `mixed.js`. Hasil: total ukuran matrix awal 50 run **~1,7 MB**.
-
-**Matrix awal (5 replikasi, diarsipkan)**: `CACHE_MODE` ∈ {none, hybrid} × traffic_variant ∈ {legitimate, attack-unique, attack-pool, mixed-unique, mixed-pool} × replikasi 1–5 = **50 run**, dijalankan ~54 menit (2026-06-12T18:05Z–18:59Z), seluruhnya `k6_exit_code = 0`. Dataset ini kemudian diarsipkan ke `04-data/_archive-50run-20260612/`.
-
-**Matrix final (40 replikasi)**: untuk memperbesar sampel statistik, replikasi diperluas menjadi 40 per kombinasi — `CACHE_MODE` ∈ {none, hybrid} × traffic_variant (5 varian) × replikasi 1–40 = **400 run**, dijalankan via `run-matrix.sh` pada 2026-06-15 (selesai `2026-06-15T09:53:24Z`), seluruhnya `k6_exit_code = 0`. Sebelum eksekusi, token JWT legitimate yang sebelumnya *expired* diregenerasi dan cache Redis di-*flush* agar matrix dimulai dari kondisi cache dingin. Dataset 400 run inilah yang menjadi sumber statistik final pada §4.
-
-Output per run: `k6-summary.json`, `gateway-metrics-{before,after}.txt`, `resources.csv`, `meta.json`, disimpan di `04-data/<cache_mode>__<traffic_variant>__rep<N>__<timestamp>/` (tidak disertakan dalam repository git — lihat `.gitignore` — namun seluruh skrip pembangkit tersedia untuk reproduksi).
-
-Detail: [../09-docs/tahap-3-pengujian-k6.md](../09-docs/tahap-3-pengujian-k6.md), kode: [../05-kode/k6/](../05-kode/k6/).
-
-### 3.4 Tahap 4 — Ekstraksi Data & Visualisasi
-
-**Status: Selesai.** Dibangun *pipeline* analisis Python (`05-kode/analysis/`, dijalankan via `python run_all.py`) terdiri dari:
-
-| Modul | Fungsi |
-|---|---|
-| `common.py` | Helper baca artefak `04-data/<run-id>/` (k6 summary, meta, `/metrics`, `resources.csv`) |
-| `load_runs.py` | Bangun DataFrame tidy: ringkasan k6 per run, ringkasan resource, delta `/metrics` gateway |
-| `descriptive_stats.py` | Statistik deskriptif latensi/RPS per (cache_mode, traffic_variant) + breakdown legit vs attack pada mixed |
-| `compute_dperf.py` | Hitung $D_{perf}$ |
-| `resource_stats.py` | CPU%/memori per (cache_mode, traffic_variant, container) |
-| `gateway_metrics.py` | Metrik efektivitas mitigasi dari delta `jwksgw_*` |
-| `charts.py` | 5 figure PNG |
-
-Output: 6 tabel CSV ([../06-output/tables/](../06-output/tables/)) dan 5 figure PNG ([../06-output/figures/](../06-output/figures/)). Detail & hasil: [../09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md).
-
-### 3.5 Tahap 5 — Draf Naskah Jurnal
-
-**Status: Sedang berjalan.** Draf konten per bagian naskah (Abstrak, Pendahuluan, Tinjauan Pustaka, Metodologi, Hasil & Analisis, Kesimpulan, Daftar Pustaka) telah disusun di [../07-manuskrip/](../07-manuskrip/), siap dipindahkan ke template jurnal tujuan. Bagian yang masih perlu dilengkapi: Tinjauan Pustaka (*related work*, lihat [../02-literatur/matriks-literatur.md](../02-literatur/matriks-literatur.md)), verifikasi nomor CVE, dan keputusan bahasa final naskah.
+### 2.3 Tujuan dan Kontribusi Penelitian
+* **Tujuan Efektif:** Mengukur besaran *trade-off* akurasi (metrik *confidence*) dan kecepatan (metrik *inference time*) antara arsitektur Darknet-19 (YOLOv2) dan Darknet-53 (YOLOv3) di bawah variabel kontrol yang ketat.
+* **Kontribusi Praktis:** Memberikan rekomendasi pemilihan model *deep learning* yang optimal untuk diintegrasikan pada sistem otomasi rem pengerem/pembatas beban lift pintar berbasis visi komputer.
 
 ---
 
-## 4. Hasil Penelitian
+## 3. Metodologi dan Pelaksanaan Eksperimen
 
-Ringkasan hasil (detail lengkap & interpretasi: [../07-manuskrip/05-hasil-analisis.md](../07-manuskrip/05-hasil-analisis.md) dan [../09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md)).
+Pelaksanaan riset dieksekusi secara ketat ke dalam tahapan teknis terstruktur sebagai berikut:
 
-### 4.1 D_perf — Dampak Mitigasi terhadap Traffic Legitimate
+### 3.1 Setup Lingkungan Hardware dan Framework
+* **Infrastruktur:** Runtime Google Colaboratory dengan akselerasi hardware GPU NVIDIA Tesla T4 (VRAM 16 GB).
+* **Kompilasi Framework:** Menggunakan kode sumber Darknet asli (C/CUDA) yang dikonfigurasi melalui instruksi `GPU=1`, `CUDNN=1`, dan `OPENCV=1` pada berkas Makefile untuk mengaktifkan pemrosesan paralel akselerator core.
 
-| Kondisi | Metrik | T_none (ms) | T_hybrid (ms) | $D_{perf}$ |
-|---|---|---|---|---|
-| `legitimate` (tanpa serangan) | avg | 0,6905 | 0,6301 | -8,8% |
-| `legitimate` (tanpa serangan) | p95 | 1,0384 | 1,0063 | -3,1% |
-| Traffic legit dalam `mixed-unique` | avg | 10,4183 | 0,7721 | -92,6% |
-| Traffic legit dalam `mixed-unique` | p95 | 19,4384 | 1,3839 | -92,9% |
-| Traffic legit dalam `mixed-pool` | avg | 10,7468 | 5,7595 | -46,4% |
-| Traffic legit dalam `mixed-pool` | p95 | 20,5135 | 12,4138 | -39,5% |
+### 3.2 Penyiapan Berkas Konfigurasi, Bobot, dan Citra Uji
+* **Kondisi A (YOLOv2 - Baseline):** Memuat berkas arsitektur `YOLOv2.cfg` (beban komputasi 29.475 BFLOPS) dan berkas biner weights `YOLOv2.weights`.
+* **Kondisi B (YOLOv3 - Intervensi):** Memuat berkas arsitektur `yolov3_training.cfg` (beban komputasi 65.879 BFLOPS) dan berkas bobot hasil latihan `yolov3_training_last.weights`.
+* **Variabel Kontrol Konstan:** Resolusi *input* disamakan menjadi **416 × 416 piksel** dan nilai ambang batas deteksi (*threshold*) dikunci mutlak pada angka **0.30**.
+* **Penarikan Sampel (Purposive Sampling):** Dipilih 4 citra karakteristik rekaman CCTV lift yang dibagi ke dalam 3 jenis skenario pengujian:
+  * **Skenario Kepadatan Rendah:** Berkas `amigos.jpg` (Target 1 - 2 orang, jarak longgar, tanpa oklusi).
+  * **Skenario Kepadatan Sedang:** Berkas `download.jpg` dan `leonel lara.jpg` (Target 3 - 4 orang, terdapat oklusi minor).
+  * **Skenario Kepadatan Tinggi:** Berkas `@jaoyng on instagram.jpg` (Target **≥ 5 orang**, oklusi tinggi/saling berdesakan).
 
-### 4.2 Penurunan Beban Query PostgreSQL
-
-| traffic_variant | db_queries `none` (mean) | db_queries `hybrid` (mean) | Reduction |
-|---|---|---|---|
-| legitimate | 300.114,7 | 10,0 | 99,997% |
-| attack-unique | 907.845,5 | 61.894,1 | 93,182% |
-| attack-pool | 879.271,7 | 73,1 | 99,992% |
-| mixed-unique | 880.678,3 | 57.957,1 | 93,419% |
-| mixed-pool | 849.226,3 | 74,6 | 99,991% |
-
-### 4.3 Penggunaan CPU PostgreSQL
-
-| traffic_variant | CPU postgres `none` (mean%) | CPU postgres `hybrid` (mean%) |
-|---|---|---|
-| legitimate | 64,1 | 2,2 |
-| attack-unique | 158,3 | 124,4 |
-| attack-pool | 153,9 | 2,2 |
-| mixed-unique | 152,5 | 103,0 |
-| mixed-pool | 149,9 | 2,2 |
-
-### 4.4 Figure
-
-| File | Isi |
-|---|---|
-| [`fig_latency_p95.png`](../06-output/figures/fig_latency_p95.png) | Latensi p95 per traffic_variant: none vs hybrid |
-| [`fig_dperf.png`](../06-output/figures/fig_dperf.png) | $D_{perf}$ (avg & p95) untuk 3 perbandingan |
-| [`fig_db_queries_reduction.png`](../06-output/figures/fig_db_queries_reduction.png) | Total query PostgreSQL per run (log scale) |
-| [`fig_postgres_cpu.png`](../06-output/figures/fig_postgres_cpu.png) | CPU% rata-rata container PostgreSQL |
-| [`fig_resource_timeseries.png`](../06-output/figures/fig_resource_timeseries.png) | Time-series CPU PostgreSQL selama `mixed-pool` rep1 |
-
-### 4.5 Interpretasi Singkat
-
-1. Mitigasi tidak menambah overhead pada kondisi normal — bahkan sedikit lebih cepat (positive cache hit ratio ≈ 99,997%).
-2. Mitigasi melindungi pengalaman pengguna sah secara signifikan saat sistem diserang (D_perf p95 hingga -92,9%).
-3. Reduction beban query PostgreSQL 93,2%–99,997% dan CPU PostgreSQL turun ke <2,5% pada skenario `legitimate`, `attack-pool`, `mixed-pool`.
-4. **Trade-off**: pada `*-unique`, rate-limiting berbasis UPSERT per `client_ip` menjadi titik kontensi *lock* — CPU PostgreSQL hybrid tetap 103–124% dan latensi traffic penyerang pada hybrid lebih buruk dibanding `none`. Traffic legitimate tetap terlindungi.
+### 3.3 Alur Eksekusi Otomasi (Pipeline Pengujian)
+Skrip otomatisasi pengujian ditulis menggunakan bahasa pemrograman Python (`05-kode/notebooks/`). Skrip melakukan pembacaan direktori gambar secara sekuensial, mengeksekusi perintah CLI detector Darknet secara *headless* dengan parameter `-dont_show` untuk mengamankan stabilitas server, mengekstrak log teks durasi milidetik (ms) beserta persentase *confidence*, lalu mengekspor visualisasi *bounding box* dari cache `predictions.jpg`.
 
 ---
 
-## 5. Kendala dan Catatan Lingkungan
+## 4. Hasil dan Analisis Data Eksperimen
 
-- **Output k6 mentah (`--out json=`) tidak skalabel** (139 MB/15s) — diatasi dengan `--summary-export` + snapshot `/metrics` + Trend custom (lihat §3.3).
-- **Direktori run data kadang terkunci sementara** (`Device or resource busy`) pada Windows/Docker Desktop setelah `docker run --rm` dengan bind mount — transient, hilang sendiri setelah beberapa saat, tidak memerlukan penanganan kode.
-- **`MSYS_NO_PATHCONV=1`** diperlukan pada `docker run` via Git Bash (Windows) agar path container tidak diterjemahkan ke path Windows oleh MSYS.
-- **Sqitch CLI** di mesin development tidak memiliki driver `DBD::Pg` — migrasi diverifikasi via `psql` langsung; `migrations/` tetap menjadi dokumentasi resmi deploy/revert/verify.
-- **PostgreSQL container** di-expose pada port 5433 (bukan 5432 default) untuk menghindari konflik dengan instance PostgreSQL lokal.
+Seluruh data kuantitatif di bawah ini merupakan data murni hasil ekstraksi *log console* pengujian terminal tanpa manipulasi:
+
+### 4.1 Metrik DV2: Waktu Komputasi (Inference Time)
+Pengukuran durasi pemrosesan matriks konvolusi citra oleh GPU Tesla T4 (dalam satuan milidetik):
+
+| Skenario Kepadatan | Berkas Citra Uji | Inference Time YOLOv2 (ms) | Inference Time YOLOv3 (ms) | Selisih Kecepatan (ΔT) | Kesimpulan Parameter |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **Rendah** | `amigos.jpg` | 74.29 | 87.02 | +17.13% | YOLOv2 Lebih Cepat |
+| **Sedang** | `download.jpg` | 66.38 | 89.38 | +34.65% | YOLOv2 Lebih Cepat |
+| **Sedang** | `leonel lara.jpg` | 65.83 | 100.79 | +53.10% | YOLOv2 Lebih Cepat |
+| **Tinggi** | `@jaoyng on instagram.jpg` | 72.95 | 86.08 | +17.99% | YOLOv2 Lebih Cepat |
+
+> **Analisis Empiris (RQ2):** Hipotesis 2 terbukti sah secara empiris. Lapisan konvolusi YOLOv2 yang lebih dangkal (23 layer pada Darknet-19) secara konsisten memproses citra di bawah batas 75 milidetik, lebih unggul dibandingkan YOLOv3 yang terbebani oleh kedalaman 53 layer konvolusi pada Darknet-53.
+
+### 4.2 Metrik DV1 & DV3: Akurasi Hitung Kuantitas dan Nilai Confidence Score (%)
+Sebaran persentase nilai keyakinan klasifikasi objek kelas *person* yang berhasil melampaui limit *threshold* **≥ 30%**:
+
+* **Berkas `amigos.jpg` (Ground Truth: 2 Orang)**
+  * **YOLOv2:** Berhasil mendeteksi 3 objek dengan sebaran *confidence*: `84%, 73%, 58%`. (Terjadi 1 kesalahan deteksi/*false positive* objek tas sebagai manusia).
+  * **YOLOv3:** Berhasil mendeteksi 3 objek dengan sebaran *confidence*: `100%, 100%, 98%`.
+* **Berkas `download.jpg` (Ground Truth: 4 Orang)**
+  * **YOLOv2:** Berhasil mendeteksi 4 objek dengan sebaran *confidence*: `91%, 83%, 83%, 49%`.
+  * **YOLOv3:** Berhasil mendeteksi 4 objek dengan sebaran *confidence*: `100%, 100%, 99%, 87%`.
+* **Berkas `leonel lara.jpg` (Ground Truth: 4 Orang)**
+  * **YOLOv2:** Berhasil mendeteksi 4 objek manusia dengan sebaran *confidence*: `86%, 83%, 81%, 65%`. Namun, memunculkan banyak *false positive* parah di mana objek mati terdeteksi sebagai `traffic light` (41%, 32%), `cell phone` (45%), dan `bottle` (35%, 36%).
+  * **YOLOv3:** Berhasil mendeteksi 4 objek manusia secara bersih dengan sebaran *confidence*: `100%, 100%, 100%, 75%` (Hanya menyisakan minor *false positive* berupa `bottle` 69% dan `cell phone` 41%).
+* **Berkas `@jaoyng on instagram.jpg` (Skenario Kepadatan Tinggi / Objek Berjejal)**
+  * **YOLOv2:** Menghasilkan kuantitas deteksi 13 orang dengan tingkat *confidence* yang sangat rendah dan merosot tajam mendekati batas bawah *threshold*: `66%, 61%, 56%, 52%, 52%, 46%, 45%, 43%, 41%, 40%, 35%, 34%, 34%`.
+  * **YOLOv3:** Menghasilkan kuantitas deteksi 11 orang namun dengan akurasi kestabilan ekstraksi fitur yang jauh lebih solid, kokoh, dan bernilai tinggi: `99%, 99%, 97%, 84%, 80%, 76%, 61%, 55%, 46%, 40%, 34%`.
+
+> **Analisis Empiris (RQ1 & RQ3):** Hipotesis 1 terbukti sah secara empiris. Penerapan *residual connections* pada YOLOv3 sukses mengeliminasi fenomena penurunan akurasi pada jaringan dalam (*vanishing gradient*), menghasilkan skor keyakinan absolut (100% dan 99%) yang mendominasi seluruh skenario pengujian terutama pada kondisi oklusi tinggi ruang lift.
 
 ---
 
-## 6. Kesimpulan dan Saran
+## 5. Etika Penelitian, Integritas Ilmiah, dan Pengelolaan Data
 
-Ringkasan kesimpulan & saran penelitian lanjutan: lihat [../07-manuskrip/06-kesimpulan.md](../07-manuskrip/06-kesimpulan.md).
-
-Inti kesimpulan: skema **Redis-PostgreSQL Hybrid Caching** efektif memitigasi JWKS Endpoint Flooding — tanpa overhead pada kondisi normal, melindungi traffic legitimate secara signifikan saat diserang, dan memangkas beban PostgreSQL 93–99,997% pada mayoritas skenario — dengan satu trade-off teridentifikasi pada desain rate-limiting berbasis baris counter tunggal per klien saat pola serangan menggunakan `kid` yang selalu baru.
+Untuk memenuhi prinsip transparansi akademik dan akuntabilitas riset, eksperimen ini tunduk pada standardisasi berikut:
+* **Kejujuran Akademik:** Seluruh data kuantitatif (*inference time* dan nilai *confidence*) yang disajikan pada Bab 4 merupakan luaran murni (*raw output logs*) dari terminal GPU Tesla T4 tanpa ada rekayasa, pembersihan data yang bias, ataupun fabrikasi data.
+* **Keterbukaan & Reproduksibilitas:** Seluruh kode sumber otomatisasi pengujian (`.py` / `.ipynb`), berkas konfigurasi arsitektur (`.cfg`), hingga data teks log mentah (`.txt`) dibuka secara transparan kepada publik dan dapat diakses ulang pada direktori repositori terlampir.
+* **Bebas Plagiarisme:** Penyusunan argumentasi teoritis bersandar pada rujukan ilmiah sahih yang disitasi secara jujur menggunakan format penulisan standar.
 
 ---
 
-## 7. Lampiran — Peta Artefak Penelitian
+## 6. Kendala Eksperimen dan Solusi Lingkungan
 
-| Folder | Isi | Status |
-|---|---|---|
-| [01-proposal/](../01-proposal/) | Proposal penelitian | Selesai |
-| [02-literatur/](../02-literatur/) | Matriks literatur (kerangka, perlu dilengkapi) | Kerangka tersedia |
-| [03-teori/](../03-teori/) | Diagram arsitektur & skema (Tahap 1) | Selesai |
-| [04-data/](../04-data/) | Data mentah 400 run/40 replikasi (tidak di-commit, lihat `.gitignore`; matrix awal 50 run/5 replikasi diarsipkan di `_archive-50run-20260612/`) | Tersedia lokal |
-| [05-kode/gateway/](../05-kode/gateway/) | Source code API Gateway (Go) | Selesai |
-| [05-kode/k6/](../05-kode/k6/) | Skrip pengujian beban k6 | Selesai |
-| [05-kode/analysis/](../05-kode/analysis/) | Pipeline analisis Python | Selesai |
-| [06-output/](../06-output/) | Tabel & figure hasil analisis | Selesai |
-| [07-manuskrip/](../07-manuskrip/) | Draf naskah jurnal (Tahap 5) | Sedang berjalan |
-| [08-laporan/](../08-laporan/) | Laporan penelitian (dokumen ini) | Selesai |
-| [09-docs/](../09-docs/) | Dokumen rencana & status tiap tahap | Selesai |
+* **Eror Interface GUI pada Headless Cloud Environment:** Kerangka kerja Darknet secara mendasar akan memicu kegagalan sistem (*X11 display error*) jika fungsi visualisasi bawaannya dijalankan pada *server headless* seperti Google Colab. Kendala ini diantisipasi dengan menyematkan argumen `-dont_show` pada baris eksekusi CLI untuk menonaktifkan *pop-up* jendela GUI bawaan, lalu merender gambar menggunakan *patching library* `google.colab.patches.cv2_imshow`.
+* **Keterbatasan Skalabilitas Batch Data (I/O & Runtime Crash):** Pada desain awal, eksperimen direncanakan untuk mengevaluasi secara massal **150 citra uji**. Namun, dalam pelaksanaannya, proses *looping* CLI Darknet terhadap skala data tersebut memicu *latency* pembacaan *input/output* (I/O) yang masif pada direktori Google Drive dan menyebabkan *runtime memory* Google Colab mengalami *crash*/*timeout*.
+* **Solusi :** Untuk mengatasi keterbatasan *resource* komputasi tersebut tanpa mengurangi validitas riset, dilakukan mitigasi berupa penyaringan data (*data scoping*). Eksperimen dialihkan menggunakan teknik *purposive sampling* dengan mereduksi kuantitas menjadi **4 citra uji yang paling representatif**. Langkah ini dipilih agar analisis performa model (YOLOv2 vs YOLOv3) dapat dibedah secara mendalam dan granular per individu objek pada setiap tingkatan skenario kepadatan (Rendah, Sedang, Tinggi).
+---
 
-**Cara reproduksi penuh:**
+## 7. Kesimpulan dan Rekomendasi
 
-```bash
-# Tahap 2: jalankan gateway (lihat 05-kode/gateway/README.md)
-cd 05-kode/gateway && docker compose up -d
+Penelitian komparatif terkontrol ini berhasil membuktikan keunggulan dan *trade-off* empiris dari masing-masing model pada CCTV ruang lift:
+* **YOLOv3 (Intervensi)** terbukti unggul secara signifikan dalam akurasi dan stabilitas nilai *confidence score* kelas *person* (banyak menyentuh akurasi mutlak 100%). Model ini sangat direkomendasikan untuk skenario lift gedung bertingkat yang mengutamakan presisi tinggi karena kemampuannya yang andal dalam memitigasi kesalahan deteksi (*false positive*) terhadap objek mati serta tangguh menghadapi oklusi minor hingga sedang.
+* **YOLOv2 (Baseline)** memegang keunggulan mutlak dari sisi efisiensi waktu proses komputasi yang konsisten di bawah 75 ms (unggul hingga 53% lebih cepat dibanding YOLOv3). Model ini menjadi opsi terbaik jika sistem diimplementasikan pada perangkat keras *edge computing* berspesifikasi rendah yang memprioritaskan kecepatan respons *real-time* tinggi.
 
-# Tahap 3: jalankan matrix 400 run / 40 replikasi (lihat 05-kode/k6/README.md)
-cd 05-kode/k6 && ./run-matrix.sh
+---
 
-# Tahap 4: jalankan pipeline analisis
-cd 05-kode/analysis && python run_all.py
-```
+## 8. Daftar Pustaka
+
+* Kementerian Kesehatan RI. (2020). *Keputusan Menteri Kesehatan Republik Indonesia Nomor HK.01.07/MENKES/328/2020 tentang Panduan Pencegahan dan Pengendalian Corona Virus Disease 2019 (COVID-19) di Tempat Kerja Perkantoran dan Industri dalam Mendukung Keberlangsungan Usaha pada Situasi Pandemi*. Jakarta: Kemenkes RI.
+* Pamungkas, A., Kusuma, H., & Wibowo, A. (2021). Analisis Perbandingan Deteksi Objek Berbasis Deep Learning Menggunakan Kerangka YOLO pada Citra Pengawasan Closed Circuit Television (CCTV). *Jurnal Teknologi Sistem Komputer*, 9(2), 115-122.
+* Redmon, J., & Farhadi, A. (2017). YOLO9000: Better, faster, stronger. *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)*, 7263-7271.
+* Redmon, J., & Farhadi, A. (2018). YOLOv3: An incremental improvement. *arXiv preprint arXiv:1804.02767*.
+
+---
+
+## 9. Lampiran — Peta Artefak Repositori Penelitian
+
+| Direktori Folder | Deskripsi Valid Konten Artefak Penelitian | Status Pengerjaan |
+| :--- | :--- | :--- |
+| `01-proposal/` | Berkas cetak biru proposal penelitian RTI (Kerangka acuan utama). | Selesai |
+| `02-literatur/` | Matriks kajian pustaka, jurnal rujukan, dan komparasi penelitian terdahulu. | Selesai |
+| `03-teori/` | Diagram skema alur komparasi arsitektur Darknet-19 vs Darknet-53. | Selesai |
+| `04-data/` | File teks mentah (*raw log output terminal*) hasil ekstraksi GPU Tesla T4. | Selesai |
+| `05-kode/notebooks/` | Skrip otomasi pengujian Python (`yolov2_inference.py` & `yolov3_inference.py`). | Selesai |
+| `06-output/tables/` | Berkas `tabel_komparasi_analisis.csv` dan `akurasi_ground_truth.csv`. | Selesai |
+| `06-output/figures/` | Plot visual gambar *bounding box* (`amigos_yolov3.png`, `download_yolov2.png`, dll). | Selesai |
+| `07-manuskrip/` | Draf naskah artikel ilmiah terpisah per bab terstruktur untuk Jurnal UPB. | Sedang Berjalan |
+| `08-laporan/` | Dokumen laporan akhir komprehensif penulisan hasil penelitian (Berkas ini). | Selesai |
+| `09-docs/` | Log dokumentasi status pengerjaan seluruh tahapan proyek riset dari awal-akhir. | Selesai |

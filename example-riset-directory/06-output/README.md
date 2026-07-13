@@ -1,30 +1,43 @@
 # 06-output
 
-Hasil olahan data & visualisasi — **Tahap 4** (lihat [../09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md)).
+Hasil olahan data & visualisasi — **Tahap 4 (Analisis & Evaluasi)**.
 
-Dihasilkan oleh `05-kode/analysis/run_all.py` dari data mentah `04-data/` (matrix 400 run, 40 replikasi).
+Dihasilkan dari ekstraksi log mentah `04-data/` untuk membandingkan hasil visualisasi citra serta metrik performa antara Kondisi A (YOLOv2) dan Kondisi B (YOLOv3).
+
+---
 
 ## tables/
 
 | File | Isi |
 |---|---|
-| `descriptive_stats.csv` | Statistik deskriptif (latensi avg/p90/p95/max, RPS, failed/checks rate) per (cache_mode, traffic_variant), mean±std atas 40 replikasi |
-| `descriptive_stats_mixed_scenarios.csv` | Breakdown latensi legitimate vs attack untuk traffic_variant `mixed-unique`/`mixed-pool` |
-| `dperf.csv` | $D_{perf}$ = (T_hybrid − T_none) / T_none × 100% untuk traffic legitimate (baseline & dalam mixed) |
-| `resource_usage.csv` | CPU% & memori (MiB) mean/max per (cache_mode, traffic_variant, container) |
-| `mitigation_effectiveness.csv` | Metrik efektivitas mitigasi dari delta `/metrics` gateway (db queries, cache hit ratio, rate-limit blocked, auth outcome) |
-| `db_query_reduction.csv` | Penurunan total query Postgres hybrid vs none per traffic_variant |
+| `tabel_komparasi_analisis.csv` | Tabel utama yang merangkum perbandingan *Inference Time* (ms), jumlah manusia terdeteksi, dan rata-rata *confidence score* antara YOLOv2 dan YOLOv3 untuk seluruh citra uji. |
+| `akurasi_ground_truth.csv` | Tabel evaluasi selisih hitung objek murni kelas `person` dibandingkan dengan data asli di lapangan (*ground truth*). |
+
+---
 
 ## figures/
 
+Berikut adalah berkas citra hasil plot *bounding box* target kelas `person` yang diekspor dari berkas temp `predictions.jpg` setelah dieksekusi oleh masing-masing model:
+
+### 1. Hasil Visualisasi YOLOv2
 | File | Isi |
 |---|---|
-| `fig_latency_p95.png` | Bar chart `http_req_duration` p95 per traffic_variant: none vs hybrid (mean±std, log scale) |
-| `fig_dperf.png` | Bar chart $D_{perf}$ (avg & p95) untuk 3 perbandingan traffic legitimate |
-| `fig_db_queries_reduction.png` | Bar chart total query Postgres per run: none vs hybrid (log scale) |
-| `fig_postgres_cpu.png` | Bar chart CPU% rata-rata container `gateway-postgres-1`: none vs hybrid |
-| `fig_resource_timeseries.png` | Time-series CPU% `gateway-postgres-1` selama `mixed-pool` rep1: none vs hybrid |
+| `amigos_yolov2.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv2 pada citra `amigos.jpg` (Terdeteksi 3 manusia beserta deteksi *false positive* objek tas). |
+| `download_yolov2.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv2 pada citra `download.jpg` (Terdeteksi 4 manusia). |
+| `leonel lara_yolov2.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv2 pada citra `leonel lara.jpg` (Terdeteksi 4 manusia beserta objek *cell phone* & *bottle*). |
+| `@jaoyng on instagram_yolov2.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv2 pada citra `@jaoyng on instagram.jpg` dengan kepadatan tinggi (Terdeteksi 13 manusia). |
+
+### 2. Hasil Visualisasi YOLOv3
+| File | Isi |
+|---|---|
+| `amigos_yolov3.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv3 pada citra `amigos.jpg` (Terdeteksi 3 manusia dengan akurasi *confidence score* mencapai 100%). |
+| `download_yolov3.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv3 pada citra `download.jpg` (Terdeteksi 4 manusia dengan akurasi stabil). |
+| `leonel lara_yolov3.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv3 pada citra `leonel lara.jpg` (Terdeteksi 4 manusia dengan *confidence score* 100%). |
+| `@jaoyng on instagram_yolov3.png` | Hasil deteksi visual objek manusia menggunakan model YOLOv3 pada citra `@jaoyng on instagram.jpg` dalam kondisi lift sangat padat (Terdeteksi 11 manusia). |
+
+---
 
 ## Acuan
 
-[../09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md)
+- Target Evaluasi: Akurasi penghitungan jumlah manusia dan efisiensi waktu deteksi pada ruang CCTV Lift.
+- Sumber Data: Ekstraksi *log console* pengujian dari folder `04-data/`.
