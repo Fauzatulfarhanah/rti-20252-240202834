@@ -117,7 +117,7 @@ Untuk memenuhi prinsip transparansi akademik dan akuntabilitas riset, eksperimen
 ## 6. Kendala Eksperimen dan Solusi Lingkungan
 
 * **Eror Interface GUI pada Headless Cloud Environment:** Kerangka kerja Darknet secara mendasar akan memicu kegagalan sistem (*X11 display error*) jika fungsi visualisasi bawaannya dijalankan pada *server headless* seperti Google Colab. Kendala ini diantisipasi dengan menyematkan argumen `-dont_show` pada baris eksekusi CLI untuk menonaktifkan *pop-up* jendela GUI bawaan, lalu merender gambar menggunakan *patching library* `google.colab.patches.cv2_imshow`.
-* **Keterbatasan Skalabilitas Batch Data (I/O & Runtime Crash):** Pada desain awal, eksperimen direncanakan untuk mengevaluasi secara massal **150 citra uji**. Namun, dalam pelaksanaannya, proses *looping* CLI Darknet terhadap skala data tersebut memicu *latency* pembacaan *input/output* (I/O) yang masif pada direktori Google Drive dan menyebabkan *runtime memory* Google Colab mengalami *crash*/*timeout*.
+* **Keterbatasan Skalabilitas Batch Data (I/O & Runtime Crash):** Pada desain awal, eksperimen direncanakan untuk mengevaluasi secara massal **150 citra uji**. Namun, dalam pelaksanaannya, proses *looping* CLI Darknet terhadap skala data tersebut memicu *latency* pembacaan *input/output* (I/O) yan;g masif pada direktori Google Drive dan menyebabkan *runtime memory* Google Colab mengalami *crash*/*timeout*.
 * **Solusi :** Untuk mengatasi keterbatasan *resource* komputasi tersebut tanpa mengurangi validitas riset, dilakukan mitigasi berupa penyaringan data (*data scoping*). Eksperimen dialihkan menggunakan teknik *purposive sampling* dengan mereduksi kuantitas menjadi **4 citra uji yang paling representatif**. Langkah ini dipilih agar analisis performa model (YOLOv2 vs YOLOv3) dapat dibedah secara mendalam dan granular per individu objek pada setiap tingkatan skenario kepadatan (Rendah, Sedang, Tinggi).
 ---
 
@@ -149,6 +149,6 @@ Penelitian komparatif terkontrol ini berhasil membuktikan keunggulan dan *trade-
 | `05-kode/notebooks/` | Skrip otomasi pengujian Python (`yolov2_inference.py` & `yolov3_inference.py`). | Selesai |
 | `06-output/tables/` | Berkas `tabel_komparasi_analisis.csv` dan `akurasi_ground_truth.csv`. | Selesai |
 | `06-output/figures/` | Plot visual gambar *bounding box* (`amigos_yolov3.png`, `download_yolov2.png`, dll). | Selesai |
-| `07-manuskrip/` | Draf naskah artikel ilmiah terpisah per bab terstruktur untuk Jurnal UPB. | Sedang Berjalan |
+| `07-manuskrip/` | Draf naskah artikel ilmiah terpisah per bab terstruktur untuk Jurnal UPB. | Selesai |
 | `08-laporan/` | Dokumen laporan akhir komprehensif penulisan hasil penelitian (Berkas ini). | Selesai |
 | `09-docs/` | Log dokumentasi status pengerjaan seluruh tahapan proyek riset dari awal-akhir. | Selesai |

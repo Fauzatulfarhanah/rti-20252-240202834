@@ -41,3 +41,5 @@ Berikut adalah berkas citra hasil plot *bounding box* target kelas `person` yang
 
 - Target Evaluasi: Akurasi penghitungan jumlah manusia dan efisiensi waktu deteksi pada ruang CCTV Lift.
 - Sumber Data: Ekstraksi *log console* pengujian dari folder `04-data/`.
+
+[../09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md)

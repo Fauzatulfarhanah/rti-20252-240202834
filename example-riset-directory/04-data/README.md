@@ -17,7 +17,7 @@ Seluruh pengujian dilakukan secara terotomatisasi menggunakan *script* Python pa
 * **Platform Eksekusi:** Google Colaboratory (Koneksi arsitektur *Hosted Runtime*)
 * **Perangkat Keras Akselerator:** GPU Nvidia Tesla T4 (16 GB VRAM)
 * **Framework Utama:** Darknet (Kompilasi berbasis C/CUDA)
-* **Parameter Batas Deteksi (*Confidence Threshold*):** `-thresh 0.30` (Hanya mendeteksi objek dengan kepastian $\ge 30\%$)
+* **Parameter Batas Deteksi (*Confidence Threshold*):** `-thresh 0.30` (Hanya mendeteksi objek dengan kepastian \ge 30\%)
 * **Parameter Tampilan:** `-dont_show` (Menonaktifkan GUI bawaan Darknet, visualisasi dialihkan ke `predictions.jpg`)
 * **Lokasi Sumber Data:** `/content/drive/MyDrive/RTI/dataset/test/`
 * **Total Sampel Citra Uji:** 4 Citra karakteristik utama (Kondisi kepadatan di dalam lift)

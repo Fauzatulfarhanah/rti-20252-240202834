@@ -1,36 +1,43 @@
 # Tahap 5 — Penulisan Draf Paper Jurnal
 
-**Status:** Konten naskah selesai — naskah konsolidasi tersedia di [../07-manuskrip/naskah-jurnal.md](../07-manuskrip/naskah-jurnal.md) & [../07-manuskrip/naskah-jurnal.docx](../07-manuskrip/naskah-jurnal.docx), tinjauan pustaka lengkap dengan 18 referensi terverifikasi (BibTeX di [../02-literatur/daftar-pustaka.bib](../02-literatur/daftar-pustaka.bib)). Sisa pekerjaan: keputusan bahasa final & pemindahan ke template jurnal tujuan (lihat "Yang Masih Perlu Dilengkapi").
-**Bergantung pada:** [tahap-4-analisis-data.md](tahap-4-analisis-data.md) — *Selesai*
+**Status:** Konten naskah selesai — naskah konsolidasi tersedia di `07-manuskrip/naskah-jurnal.md`, tinjauan pustaka lengkap dengan referensi domain visi komputer terverifikasi (BibTeX di `02-literatur/daftar-pustaka.bib`). Sisa pekerjaan: keputusan bahasa final & pemindahan ke template jurnal tujuan (lihat "Yang Masih Perlu Dilengkapi").  
+**Bergantung pada:** `tahap-4-analisis-data.md` — Selesai  
+**Lokasi Berkas Dokumentasi:** `09-docs/tahap-5-draf-paper.md`
 
 ---
 
 ## Tujuan
 
-Menyusun draf naskah ilmiah dengan gaya bahasa akademis formal, objektif, dan pasif, sesuai target publikasi Sinta 2 / Scopus Q3-Q4.
+Menyusun draf naskah ilmiah dengan gaya bahasa akademis formal, objektif, dan terstruktur mengenai komparasi performa YOLOv2 vs YOLOv3 untuk deteksi objek manusia pada ruang lift tertutup, disesuaikan untuk target publikasi Sinta 2 atau Jurnal Internasional Terindeks.
 
-## Rencana Deliverable (Struktur Naskah)
+## Rencana Deliverable (Struktur Naskah & Pemetaan Folder)
 
-| Bagian | File | Status |
+Proses penulisan naskah didistribusikan dan diorganisasikan secara modular ke dalam struktur direktori riset sebagai berikut:
+
+| Bagian Naskah | Lokasi Berkas Fisik | Status Konten |
 |---|---|---|
-| Naskah konsolidasi (template jurnal) | [../07-manuskrip/naskah-jurnal.md](../07-manuskrip/naskah-jurnal.md), [../07-manuskrip/naskah-jurnal.docx](../07-manuskrip/naskah-jurnal.docx) | Selesai — gabungan §1–§5 + Daftar Pustaka |
-| Abstrak | [../07-manuskrip/01-abstrak.md](../07-manuskrip/01-abstrak.md) | Draf selesai (ID & EN) |
-| Pendahuluan (latar belakang, rumusan masalah, tujuan, kontribusi) | [../07-manuskrip/02-pendahuluan.md](../07-manuskrip/02-pendahuluan.md) | Draf selesai |
-| Tinjauan Pustaka (JWT/JWKS, mitigasi, *related work*) | [../07-manuskrip/03-tinjauan-pustaka.md](../07-manuskrip/03-tinjauan-pustaka.md) | Selesai — §2.1–2.3 (RFC + CVE-2026-48524 terverifikasi) dan §2.4 *Related Work* (10 sitasi) |
-| Metodologi (arsitektur, skema, desain eksperimen, metrik) | [../07-manuskrip/04-metodologi.md](../07-manuskrip/04-metodologi.md) | Draf selesai |
-| Hasil & Analisis (statistik deskriptif, $D_{perf}$, reduksi query/CPU) | [../07-manuskrip/05-hasil-analisis.md](../07-manuskrip/05-hasil-analisis.md) | Draf selesai, mengacu ke [../06-output/](../06-output/) |
-| Kesimpulan & Saran Penelitian Lanjutan | [../07-manuskrip/06-kesimpulan.md](../07-manuskrip/06-kesimpulan.md) | Draf selesai |
-| Daftar Pustaka | [../07-manuskrip/07-daftar-pustaka.md](../07-manuskrip/07-daftar-pustaka.md) | Selesai — 18 referensi format IEEE (7 RFC, 1 advisory CVE-2026-48524, 10 related work); BibTeX: [../02-literatur/daftar-pustaka.bib](../02-literatur/daftar-pustaka.bib) |
+| Naskah Utama Konsolidasi | `07-manuskrip/naskah-jurnal.md` | Selesai — Gabungan draf utuh dari pendahuluan hingga kesimpulan. |
+| Abstrak (ID & EN) | Konten di dalam `07-manuskrip/naskah-jurnal.md` | Selesai — Ringkasan latar belakang lift padat, trade-off model, dan hasil final. |
+| Pendahuluan | Konten di dalam `07-manuskrip/naskah-jurnal.md` | Selesai — Rumusan masalah mengenai oklusi objek manusia dan keterbatasan ruang CCTV lift. |
+| Tinjauan Pustaka & Teori | `02-literatur/matriks-literatur.md`<br><br>`03-teori/arsitektur-dan-skema.md` | Selesai — Kajian komparatif struktur dalam Darknet-19 vs Darknet-53 serta dasar teori ekstraksi fitur multi-skala. |
+| Metodologi Pengujian | Konten di dalam `07-manuskrip/naskah-jurnal.md` | Selesai — Alur otomatisasi skrip looping Python (`05-kode/YOLOv2` & `05-kode/YOLOv3`) di lingkungan Google Colab GPU Tesla T4. |
+| Hasil & Analisis Pembahasan | Konten di dalam `07-manuskrip/naskah-jurnal.md` | Selesai — Mengacu langsung pada tabulasi data kuantitatif dari log konsol di folder `06-output/`. |
+| Kesimpulan & Saran | Konten di dalam `07-manuskrip/naskah-jurnal.md` | Selesai — Rekomendasi pemilihan model berdasarkan ambang batas kecepatan real-time (30 FPS). |
+| Daftar Pustaka (Bibliografi) | `02-literatur/daftar-pustaka.bib` | Selesai — Kumpulan sitasi ilmiah berformat BibTeX (terhubung ke Mendeley/Zotero). |
 
-Outline & peta sumber: [../07-manuskrip/00-outline.md](../07-manuskrip/00-outline.md).
+## Peta Sumber Daya Berdasarkan Direktori Kerja
+
+Penyusunan manuskrip akhir memanfaatkan seluruh aset yang tersebar di dalam folder penelitian:
+
+- `00-admin/` & `01-proposal/`: Digunakan sebagai acuan pemenuhan target timeline riset dan landasan awal justifikasi pemilihan topik visi komputer pada lift.
+- `03-teori/`: Memuat gambar aset visual (`image.png` dan `Untitled Diagram.drawio (24).png`) yang merepresentasikan diagram alur pipa data (*pipeline*) pengujian citra dari Drive ke terminal Darknet Colab.
+- `05-kode/`: Menyimpan dokumentasi skrip bersih automated-testing YOLOv2 dan YOLOv3 yang siap dilampirkan pada bagian lampiran paper atau di-share ke repositori publik.
+- `06-output/`: Menjadi basis data utama penulisan Bab 4 Jurnal, berisi rangkuman performa inference time (ms) dan tingkat Confidence Score (%) per tingkatan skenario kepadatan citra.
+- `08-laporan/` (`laporan-penelitian_example.md`): Menampung narasi deskriptif versi panjang (gaya laporan institusional/tugas akhir) yang menjadi jangkar perluasan pembahasan naskah jurnal.
 
 ## Yang Masih Perlu Dilengkapi Sebelum Submit
 
-1. **Keputusan bahasa final naskah** (Indonesia untuk Sinta 2 / Inggris untuk Scopus) — saat ini judul & abstrak dwibahasa, isi §1–§5 Bahasa Indonesia.
-2. **Pemindahan ke template jurnal tujuan** — dilakukan oleh peneliti (di luar scope AI assistant), menggunakan [../07-manuskrip/naskah-jurnal.md](../07-manuskrip/naskah-jurnal.md)/`.docx` sebagai sumber.
-3. **Penempatan figure/tabel final** sesuai gaya jurnal (caption, penomoran, resolusi) — sumber: [../06-output/figures/](../06-output/figures/) dan [../06-output/tables/](../06-output/tables/).
-4. **Lengkapi metadata penulis & afiliasi** (placeholder pada `naskah-jurnal.md`).
-
-## Catatan
-
-Bagian Hasil & Analisis mengacu langsung pada output Tahap 4 ([../06-output/](../06-output/)). Ringkasan naratif tambahan (versi lebih panjang, gaya laporan institusional) tersedia di [../08-laporan/laporan-penelitian.md](../08-laporan/laporan-penelitian.md). Bibliografi (18 referensi terverifikasi) dapat diimpor ke Mendeley dari [../02-literatur/daftar-pustaka.bib](../02-literatur/daftar-pustaka.bib).
+- **Keputusan Bahasa Final Naskah:** Penentuan akhir penggunaan bahasa. Jika ditargetkan ke Sinta 2, pertahankan isi naskah di `07-manuskrip/naskah-jurnal.md` dalam Bahasa Indonesia formal. Jika dialihkan ke Scopus, lakukan translasi menyeluruh ke Bahasa Inggris ilmiah.
+- **Pemindahan ke Berkas Word (.docx):** Peneliti perlu menyalin teks dari berkas markdown `naskah-jurnal.md` ke dalam format dokumen Microsoft Word sesuai dengan gaya selingkung (author guidelines) dari jurnal tujuan.
+- **Penyisipan Gambar Visualisasi Utama:** Memasukkan potongan gambar `predictions.jpg` (hasil render `cv2_imshow` dari Tahap 3) yang menunjukkan perbandingan grafis bounding box manusia pada kondisi oklusi tinggi sebagai Key Figure di bab hasil.
+- **Kelengkapan Metadata Penulis:** Mengisi nama penulis, instansi/afiliasi, dan email korespondensi pada kolom placeholder yang terletak di baris atas naskah.

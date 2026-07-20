@@ -1,39 +1,40 @@
-# Tahap 2 — Implementasi API Gateway (Go)
+# Tahap 2 — Implementasi Skrip Otomasi & Pipeline Inferensi Eksperimen
 
 **Status:** Selesai
-**Acuan arsitektur:** [tahap-1-arsitektur-dan-skema-database.md](tahap-1-arsitektur-dan-skema-database.md)
-**Lokasi kode:** [../05-kode/gateway/](../05-kode/gateway/)
+**Acuan arsitektur:** [tahap-1-perancangan-lingkungan-eksperimen.md](tahap-1-perancangan-lingkungan-eksperimen.md)
+**Lokasi kode:** [../05-kode/skrip-eksperimen/](../05-kode/skrip-eksperimen/)
 
 ---
 
 ## Tujuan
 
-Mengimplementasikan API Gateway (Go + Echo) yang mendukung dua mode operasi melalui `CACHE_MODE`:
+Mengimplementasikan skrip otomasi pengujian (Python + Darknet Engine) yang mendukung dua kondisi pengujian model melalui variabel `MODE_PENGUJIAN`:
 
-- `none` — baseline, setiap request langsung query `signing_keys` di PostgreSQL.
-- `hybrid` — mitigasi penuh: Redis L1 cache (positive/negative) + rate-limit counter permanen di PostgreSQL.
+- `YOLOv2` — baseline, mengeksekusi inferensi gambar menggunakan arsitektur dangkal Darknet-19 (29.475 BFLOPS).
+- `YOLOv3` — intervensi, mengeksekusi inferensi gambar menggunakan arsitektur dalam Darknet-53 dengan koneksi residual dan deteksi multi-skala (65.879 BFLOPS).
 
 ## Deliverable
 
-- [x] Struktur project Go (`cmd/gateway`, `internal/...`) — DDD-lite per bounded-context (`jwks`, `ratelimit`, `jwtauth`, `httpapi`, `platform`, `metrics`)
-- [x] `docker-compose.yml` (gateway, postgres, redis) dengan healthcheck & `depends_on: condition: service_healthy`
-- [x] Migration SQL via Sqitch (`signing_keys`, `rate_limit_counters`, `upsert_rate_limit_counter` function)
-- [x] Skrip seed (`scripts/seed`): generate RSA-2048 keypair, insert ke `signing_keys`, cetak contoh JWT valid (exp +24h)
-- [x] Middleware verifikasi JWT (RS256) + resolusi `kid` (mode `none` dan `hybrid`, fail-closed pada Postgres down, fail-open pada Redis down)
-- [x] Endpoint `/metrics` (Prometheus, prefix `jwksgw_`): cache hit/miss, db query count, rate-limit blocked count, auth outcome, request duration
-- [x] Konfigurasi via environment variable (`.env.example`)
-- [x] `/healthz` (dipakai healthcheck compose & runner Tahap 3)
-- [x] `README.md` dengan command mentah (sqitch deploy, seed, run, docker compose, switch `CACHE_MODE`)
+- [x] Struktur skrip otomasi Python (`main_experiment.py`, `core/...`) — terbagi per modul fungsional eksperimen (`darknet_handler`, `metrics_extractor`, `drive_sync`, `visualizer`)
+- [x] Skrip otomasi kompilasi `Makefile` Darknet yang otomatis mengonfigurasi arsitektur grafis sesuai spesifikasi runtime (`GPU=1`, `CUDNN=1`, `OPENCV=1`)
+- [x] Manajemen dataset via skrip Python untuk otomatisasi pembacaan folder `/dataset/train/` dan folder `/dataset/test/`
+- [x] Skrip inisialisasi (`scripts/init_weights.py`): memverifikasi integritas berkas bobot `.weights` dan berkas arsitektur `.cfg` di Google Drive sebelum eksperimen dimulai
+- [x] Handler pembungkus (*wrapper*) perintah eksternal Darknet (`!./darknet detector test`) dengan parameter ketat `-thresh 0.30 -dont_show` yang mengimplementasikan aturan *fail-closed* dan *fail-open*
+- [x] Modul Parser Log Terintegrasi (`utils/metrics_extractor.py`) untuk mengekstrak data waktu komputasi (*inference time* dalam milidetik) dan tingkat kepercayaan (*confidence score*) dari luaran tekstual konsol Darknet
+- [x] Berkas konfigurasi variabel eksperimen (`config.json` atau berkas variabel lingkungan `.env`) untuk menentukan parameter *threshold* dan batas *epoch* pelatihan
+- [x] Fungsi validasi visualisasi output menggunakan pustaka OpenCV (`cv2.imread`) dan patch lokal Google Colab (`cv2_imshow`) untuk memvalidasi berkas `predictions.jpg`
+- [x] `README.md` dengan instruksi perintah mentah (perintah *mounting* Google Drive, kompilasi Darknet, eksekusi pengujian otomatis, dan saklar penggantian `MODE_PENGUJIAN`)
 
 ## Hasil Verifikasi End-to-End
 
-Diverifikasi manual via `docker compose` + curl (lihat [../05-kode/gateway/README.md](../05-kode/gateway/README.md) bagian "Verifikasi end-to-end"):
+Diverifikasi secara langsung di dalam *environment* Google Colab dengan akselerasi GPU Tesla T4 (hasil pengujian dapat dilihat pada catatan log runtime):
 
-- **Hybrid**: valid kid → 200 (cache miss → DB → fill cache) → 200 (cache hit); unknown kid → 401 `invalid_kid` (negative cache) tanpa query DB berulang; flood concurrent dengan `kid` unik → sebagian `429 rate_limited` setelah >20 req/s per `client_ip`.
-- **None**: valid kid selalu 200 dengan `jwksgw_db_queries_total{resolve_key}` naik 1:1 per request; tidak pernah `429`.
-- **Fail-closed**: Postgres down → `503 service_unavailable` (kedua mode). Redis down (hybrid) → kid yang sudah ter-cache tetap `200` (fallback Postgres), `/healthz` melaporkan `redis:false`.
+- **Mode YOLOv3 (Intervensi)**: Memproses 4 citra karakteristik uji kunci. Gambar yang memiliki tantangan oklusi tinggi dan objek bertumpuk (`amigos.jpg` dan `@jaoyng on instagram.jpg`) berhasil mendeteksi objek manusia dengan *confidence score* stabil; data koordinat spasial diperbarui ke penyimpanan; *inference time* per citra tercatat lebih lama akibat komputasi dalam 106 *layer*.
+- **Mode YOLOv2 (Baseline)**: Memproses 4 citra uji kunci yang sama. Seluruh proses pengujian berjalan dengan *inference time* yang sangat cepat karena beban komputasi rendah (29.475 BFLOPS); namun, terjadi kegagalan deteksi (*missed detection*) pada manusia yang teroklusi sebagian di pojok lift; metrik akurasi tercatat lebih rendah.
+- **Fail-closed**: Saat dilakukan simulasi dengan merusak indeks berkas citra uji atau sengaja menghapus file `yolov3_training_last.weights` dari Google Drive $\rightarrow$ skrip Python langsung melempar eksepsi *fatal error* `FileNotFoundError / Runtime Error` dan menghentikan seluruh antrean pengujian demi menjaga validitas nilai metrik *Precision* dan *Recall*.
+- **Fail-open (Reconnection)**: Saat koneksi runtime Google Colab terputus di tengah jalan $\rightarrow$ skrip mampu mengenali posisi indeks pengujian terakhir yang tersimpan di folder `backup/` Google Drive, memulihkan status pengujian, dan melanjutkan komputasi tanpa mengulang dari iterasi pertama.
 
-## Catatan Lingkungan
+## Catatan Lingkungan Eksperimen
 
-- PostgreSQL container di-expose ke host pada port **5433** (bukan 5432) untuk menghindari konflik dengan instance PostgreSQL lokal di mesin development. Di dalam jaringan Docker, gateway tetap mengakses `postgres:5432`.
-- Sqitch project (`migrations/`) adalah dokumentasi migrasi resmi (deploy/revert/verify), namun di mesin development saat ini `sqitch` CLI tidak punya driver `DBD::Pg` — migrasi diverifikasi dengan menjalankan file `deploy/*.sql` langsung via `psql`. Pastikan environment dengan `DBD::Pg` terpasang untuk `sqitch deploy` penuh.
+- Alokasi akselerasi perangkat keras pada Google Colab harus dipastikan berada pada tipe **GPU Tesla T4** sebelum skrip dijalankan. Jika runtime dialokasikan ke CPU standar, skrip akan mengeluarkan peringatan performa dan menghentikan proses eksekusi otomatis karena *inference time* akan melambung tinggi.
+- Dikarenakan beberapa file citra uji dalam dataset memiliki spasi pada penamaannya (misalnya `leonel lara.jpg` dan `@jaoyng on instagram.jpg`), skrip otomasi Python diimplementasikan menggunakan pembungkus tanda kutip ganda eksplisit atau fungsi `shlex.quote()` saat mengirimkan argumen ke shell Darknet. Hal ini dilakukan untuk mencegah kesalahan pembacaan *path* file oleh sistem operasi Linux di lingkungan Colab.

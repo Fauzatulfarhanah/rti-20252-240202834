@@ -1,0 +1,34 @@
+import os
+import cv2
+from google.colab.patches import cv2_imshow
+
+# 1. Pastikan program berada di folder utama darknet
+%cd /content/darknet
+
+# 2. Tentukan folder lokasi 5 gambar kamu di Drive
+folder_test = "/content/drive/MyDrive/RTI/dataset/test/"
+
+# 3. Ambil daftar semua file gambar di folder tersebut
+daftar_gambar = [f for f in os.listdir(folder_test) if f.endswith(('.jpg', '.jpeg', '.png'))]
+
+print(f"Menemukan {len(daftar_gambar)} gambar untuk diuji.\n")
+
+# 4. Lakukan perulangan untuk menguji tiap gambar dengan YOLOv3
+for nama_file in daftar_gambar:
+    jalur_gambar = os.path.join(folder_test, nama_file)
+    print(f"=== MENGUJI GAMBAR: {nama_file} ===")
+
+    # Jalankan perintah Darknet detector
+    !./darknet detector test \
+      cfg/coco.data \
+      /content/drive/MyDrive/RTI/config/yolov3_training.cfg \
+      /content/drive/MyDrive/RTI/weights/yolov3_training_last.weights \
+      "{jalur_gambar}" \
+      -thresh 0.30 \
+      -dont_show
+
+    # Tampilkan hasil deteksi visualnya langsung di layar Colab
+    hasil_prediksi = cv2.imread('predictions.jpg')
+    print(f"Hasil Visual untuk {nama_file}:")
+    cv2_imshow(hasil_prediksi)
+    print("\n" + "="*50 + "\n")

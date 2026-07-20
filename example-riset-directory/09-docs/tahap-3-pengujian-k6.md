@@ -1,190 +1,94 @@
-# Tahap 3 — Skrip Pengujian k6 (Legitimate vs Attack Traffic)
+# Tahap 3 — Konfigurasi Lingkungan, Kalibrasi, dan Skrip Otomatisasi Pengujian (YOLOv2 vs YOLOv3)
 
-**Status:** Selesai — matrix 400 run (40 replikasi) sudah dijalankan, data tersedia di `04-data/` (matrix awal 50 run/5 replikasi diarsipkan di `04-data/_archive-50run-20260612/`)
-**Bergantung pada:** [tahap-2-implementasi-gateway.md](tahap-2-implementasi-gateway.md)
-**Lokasi kode:** [../05-kode/k6](../05-kode/k6)
+**Status:** Selesai — Seluruh alur penyiapan environment, perbaikan kompilasi, hingga skrip looping pengujian otomatis untuk YOLOv2 dan YOLOv3 telah berhasil dieksekusi di Google Colab.  
+**Bergantung pada:** Akselerasi Hardware GPU (NVIDIA Tesla T4 di Google Colab)  
+**Lokasi Penyimpanan Data:** Google Drive (`/content/drive/MyDrive/RTI/`)
 
 ---
 
 ## Tujuan
 
-Menyusun skenario k6 untuk membandingkan gateway pada mode `CACHE_MODE=none` (baseline) vs `CACHE_MODE=hybrid` (mitigasi), dengan tiga jenis traffic:
+Menyiapkan lingkungan kerja framework Darknet berbasis GPU dan menyusun skrip looping otomatis (Python) untuk menguji serta membandingkan performa model YOLOv2 (Baseline) vs YOLOv3 (Intervensi). Pengujian dilakukan terhadap variasi citra di dalam lift berdasarkan tiga skenario kepadatan objek manusia:
 
-- **Legitimate traffic** — request dengan JWT valid (`kid` dikenal), mensimulasikan beban normal.
-- **Attack traffic** — request dengan JWT ber-`kid` acak/tidak terdaftar, mensimulasikan JWKS Endpoint Flooding (CVE-2026-48524).
-- **Mixed traffic** — legitimate + attack berjalan bersamaan, untuk mengukur dampak mitigasi terhadap pengalaman user legit saat diserang.
+- **Kepadatan Rendah:** Citra dengan jumlah objek sedikit (1-2 orang) tanpa halangan.
+- **Kepadatan Sedang:** Citra dengan jumlah objek beberapa orang (3-4 orang) dengan sedikit halangan/oklusi.
+- **Kepadatan Tinggi:** Citra dengan kondisi ramai (≥ 5 orang) dan objek saling bertumpukan/terhalang ekstrem.
 
-## Deliverable
+## Deliverable Praktikum
 
-- [x] Skrip k6 `legitimate.js` (steady load dengan `kid` valid)
-- [x] Skrip k6 `attack.js` (flooding dengan `kid` acak/pool, `KID_STRATEGY=unique|pool`)
-- [x] Skrip k6 `mixed.js` (kombinasi legitimate + attack secara bersamaan, dengan Trend custom per scenario)
-- [x] Konfigurasi skenario (VUs, durasi, ramping) untuk tiap kombinasi mode × traffic
-- [x] Output metrics k6 + snapshot `/metrics` gateway dalam format JSON/CSV untuk Tahap 4
-- [x] Smoke test (kalibrasi sebelum matrix penuh)
-- [x] Matrix penuh 400 run (2 cache_mode x 5 traffic_variant x 40 replikasi)
+- [x] Integrasi Cloud: Menghubungkan Google Colab dengan direktori penyimpanan Google Drive.
+- [x] Kompilasi Jaringan: Modifikasi berkas Makefile untuk mengaktifkan fitur GPU, OpenCV, dan cuDNN.
+- [x] Audit Pustaka: Pemeriksaan versi dependensi Python (`cv2`, `numpy`, `PIL`, `matplotlib`, `pandas`).
+- [x] Solusi Eror (Troubleshooting): Pembersihan sisa build yang gagal dengan `!make clean` sebelum kompilasi ulang berhasil.
+- [x] Uji Jalur Data (Smoke Test): Kalibrasi awal menggunakan gambar `dog.jpg` dan uji coba satu `manusia.jpg`.
+- [x] Otomatisasi YOLOv3: Skrip perulangan Python untuk mendeteksi seluruh isi folder gambar uji menggunakan model YOLOv3.
+- [x] Otomatisasi YOLOv2: Skrip perulangan Python untuk mendeteksi seluruh isi folder gambar uji menggunakan model YOLOv2.
 
-## Desain yang Diimplementasikan
+## Desain & Struktur Direktori Praktikum
 
-### Struktur kode (`05-kode/k6/`)
+Semua berkas bobot (*weights*), konfigurasi (`.cfg`), dan citra uji diletakkan di dalam Google Drive agar tidak hilang saat session Colab terputus:
 
-```
-05-kode/k6/
-├── lib/
-│   ├── config.js              # BASE_URL, durasi, VU, KID_STRATEGY (env-driven)
-│   ├── tokens.js               # SharedArray token legit + pool kid attack
-│   ├── legit-tokens.json       # JWT valid (hasil gen-legit-tokens.sh)
-│   └── gen-legit-tokens.sh      # regenerasi legit-tokens.json dari seed Tahap 2
-├── legitimate.js                # constant-vus, JWT valid
-├── attack.js                    # ramping-vus 0->200, JWT kid acak/invalid
-├── mixed.js                     # legitimate + attack berjalan bersamaan
-├── monitor-resources.sh         # docker stats polling -> resources.csv
-├── run-scenario.sh               # runner 1 kombinasi -> 04-data/<run-id>/
-└── README.md
-```
-
-### Skrip & skenario
-
-| Skrip | Executor | Default durasi | Env relevan |
-|---|---|---|---|
-| `legitimate.js` | `constant-vus` | 5 VU x 60s | `LEGIT_VUS`, `LEGIT_DURATION` |
-| `attack.js` | `ramping-vus` 0→200 | ramp 10s + hold 50s | `ATTACK_RAMP_DURATION`, `ATTACK_HOLD_DURATION`, `ATTACK_MAX_VUS`, `KID_STRATEGY` |
-| `mixed.js` | `legitimate` + `attack` sebagai dua k6 scenario bersamaan, masing-masing ditag `scenario` | sama seperti di atas | semua env di atas |
-
-`KID_STRATEGY`:
-- `unique` — kid acak baru tiap request → menguji jalur **rate-limit**.
-- `pool` — kid dari pool ~50 nilai (dibuat sekali via `SharedArray`, dipakai berulang) → menguji **negative cache** + rate-limit, lebih representatif pola CVE.
-
-Token legitimate: 1 JWT valid (`kid: seed-key-01`, exp +24h) di-generate sekali dari seed Tahap 2 (`gen-legit-tokens.sh`), dipakai berulang via `SharedArray` — tidak ada signing dinamis di k6.
-
-### Matrix eksperimen
-
-| Dimensi | Nilai |
-|---|---|
-| `CACHE_MODE` | `none`, `hybrid` |
-| Traffic variant | `legitimate`, `attack-unique`, `attack-pool`, `mixed-unique`, `mixed-pool` |
-| Replikasi | 40 |
-
-Total: **2 × 5 × 40 = 400 run**, dijalankan via loop `run-matrix.sh` (membungkus `run-scenario.sh`, lihat [README](../05-kode/k6/README.md)).
-
-### Runner (`run-scenario.sh`)
-
-Untuk setiap kombinasi `<cache_mode> <traffic_variant> <replication>`:
-
-1. `CACHE_MODE=<mode> docker compose up -d --force-recreate gateway` (di `05-kode/gateway/`).
-2. Poll `GET /healthz` sampai sehat (timeout 30s).
-3. Start `monitor-resources.sh` di background → `resources.csv`.
-4. Snapshot `GET /metrics` gateway → `gateway-metrics-before.txt`.
-5. Jalankan skrip k6 via `docker run --rm --network gateway_default ... grafana/k6 run --summary-export ...`.
-6. Snapshot `GET /metrics` gateway → `gateway-metrics-after.txt`.
-7. Stop resource monitor, tulis `meta.json` (cache_mode, traffic_variant, kid_strategy, replication, waktu mulai/selesai, parameter rate-limit & TTL cache).
-
-`<run-id>` = `<cache_mode>__<traffic_variant>__rep<N>__<timestamp>`.
-
-### Output per run (`04-data/<run-id>/`)
-
-```
-04-data/<cache_mode>__<traffic_variant>__rep<N>__<timestamp>/
-├── k6-summary.json            # ringkasan agregat k6 (--summary-export)
-├── gateway-metrics-before.txt # snapshot /metrics gateway sebelum run
-├── gateway-metrics-after.txt  # snapshot /metrics gateway sesudah run
-├── resources.csv               # timestamp,container,cpu_pct,mem_usage,mem_pct (~3s interval)
-└── meta.json                    # cache_mode, traffic_variant, kid_strategy, replication, waktu mulai/selesai
+```text
+/content/drive/MyDrive/RTI/
+├── config/
+│   ├── YOLOv2.cfg                   # Arsitektur model YOLOv2 (matriks 416 x 416)
+│   └── yolov3_training.cfg          # Arsitektur model YOLOv3 (matriks 416 x 416)
+├── weights/
+│   ├── YOLOv2.weights               # Bobot standar YOLOv2
+│   └── yolov3_training_last.weights # Bobot hasil training YOLOv3
+└── dataset/
+    └── test/                        # Folder berisi kumpulan gambar lift yang diuji
+        ├── manusia.jpg              # Citra untuk uji coba awal
+        ├── test_gambar.jpg          # Citra hasil salinan dog.jpg untuk kalibrasi
+        └── [Gambar Kepadatan Lift Lainnya] (.jpg, .jpeg, .png)
 ```
 
-`k6-summary.json` mencakup `metrics.http_req_duration` (semua scenario) serta,
-untuk `mixed.js`, `metrics.legitimate_req_duration` dan
-`metrics.attack_req_duration` (Trend custom per scenario, di-tag via
-`res.timings.duration`) — dipakai Tahap 4 untuk menghitung D_perf traffic
-legitimate saat mixed (hybrid vs none).
+## Skenario Pengujian & Alur Kode Praktikum
 
-`gateway-metrics-*.txt` adalah scrape Prometheus (`jwksgw_*`) — delta
-before/after memberi angka eksak `jwksgw_db_queries_total`,
-`jwksgw_cache_requests_total`, `jwksgw_rate_limit_blocked_total`,
-`jwksgw_auth_requests_total` per run, untuk metrik "efektivitas mitigasi" di
-Tahap 4.
+### 1. Penyiapan Lingkungan Awal & Perbaikan Eror (Langkah 1 - 4)
 
-`resources.csv` interval nominal 1s, tapi `docker stats --no-stream` untuk 3
-container butuh ~2-3s di Windows Docker Desktop sehingga interval aktual ~3s
-— cukup untuk tren CPU/memori pada window 60s.
+Pertama, Google Drive disambungkan ke mesin Colab. Selanjutnya, repositori Darknet dikloning. Agar proses deteksi berjalan cepat menggunakan kartu grafis (GPU Tesla T4), setelan awal Makefile diubah dari 0 menjadi 1 menggunakan perintah `sed`.
 
-State Postgres/Redis **tidak** direset antar run — `window_start` per-detik
-pada rate limiter membuat data antar run tetap terisolasi.
+**Catatan Penanganan Eror:** Setelah verifikasi pustaka Python dilakukan, sempat terjadi kendala kegagalan build/error compile. Solusi yang diterapkan adalah menjalankan perintah pembersihan memori sisa kompilasi terlebih dahulu baru kemudian memicu kompilasi ulang secara bersih:
 
-## Hasil Smoke Test
+```bash
+%cd /content/darknet
+!make clean
+!make
+```
 
-Smoke test (`./run-scenario.sh hybrid legitimate smoke -e LEGIT_DURATION=15s -e LEGIT_VUS=2`)
-dijalankan untuk kalibrasi sebelum commit ke matrix 50-run.
+### 2. Kalibrasi Jalur Data (Langkah 5)
 
-**Iterasi pertama** memakai `--out json=...` (raw per-request metrics):
-menghasilkan `k6-output.json` **139MB / 571.414 baris** hanya dari 15 detik,
-2 VU, ~2.900 req/s. Diekstrapolasi ke matrix penuh (60s, attack.js ramping ke
-200 VU, 50 run) → volume data tidak terkelola (puluhan GB, risiko disk penuh).
+Folder tujuan di Drive dibuat secara otomatis jika belum ada. Gambar `dog.jpg` disalin sebagai tes awal, lalu dilakukan pengujian satu citra (`manusia.jpg`) untuk memastikan biner `./darknet` bisa mengenali konfigurasi model YOLOv3 dengan ambang batas (threshold) 0.30:
 
-**Perbaikan**: ganti `--out json=...` → `--summary-export=...` (statistik
-agregat per metrik), tambah snapshot `/metrics` gateway before/after, dan
-tambah `Trend` custom per scenario di `mixed.js`.
+```bash
+!./darknet detector test \
+  cfg/coco.data \
+  /content/drive/MyDrive/RTI/config/yolov3_training.cfg \
+  /content/drive/MyDrive/RTI/weights/yolov3_training_last.weights \
+  /content/drive/MyDrive/RTI/dataset/test/manusia.jpg \
+  -thresh 0.30 \
+  -dont_show
+```
 
-**Iterasi kedua** (setelah perbaikan), hasil untuk 15s/2VU/~2.900 req/s
-(43.531 requests, 100% checks lolos, `http_req_duration` avg ≈ 463µs):
+### 3. Eksekusi Otomatisasi Masal (YOLOv3 vs YOLOv2)
 
-| File | Ukuran |
-|---|---|
-| `k6-summary.json` | ~3.3 KB |
-| `gateway-metrics-before.txt` | ~165 B |
-| `gateway-metrics-after.txt` | ~2.3 KB |
-| `resources.csv` (15s @ ~3s interval) | ~1.2 KB |
+Bukan memproses satu per satu gambar secara manual, praktikum menggunakan skrip perulangan Python (`for nama_file in daftar_gambar`) yang otomatis memindai seluruh file berekstensi gambar di folder Drive.
 
-Total per run < 10 KB — aman untuk matrix 50-run.
+Pada **Skenario YOLOv3:** Gambar disuapkan ke arsitektur backbone Darknet-53. Setelah teks perhitungan layer keluar di terminal, hasil gambar visual diambil dari berkas sementara `predictions.jpg` lalu ditampilkan langsung ke layar menggunakan fungsi `cv2_imshow()`.
 
-## Hasil Matrix Penuh (awal, 50 run — diarsipkan)
+Pada **Skenario YOLOv2:** Dengan logika perulangan yang sama, gambar dialihkan ke berkas konfigurasi `YOLOv2.cfg` dan bobot `YOLOv2.weights` (Darknet-19) untuk melihat perbandingan hasil deteksi objek manusianya.
 
-Matrix awal 50 run (5 replikasi) dijalankan via loop `run-scenario.sh` (lihat
-di atas), total durasi run 2026-06-12T18:05Z – 2026-06-12T18:59Z (~54 menit
-untuk 50 run, lebih cepat dari estimasi karena overhead restart gateway/health
-check kecil pada mesin lokal). Semua 50 run selesai dengan `k6_exit_code: 0`.
+## Karakteristik Hasil Output Pengujian
 
-Output: `04-data/<cache_mode>__<traffic_variant>__rep<N>__<timestamp>/`,
-total ukuran seluruh matrix **~1.7 MB** (vs. 139 MB untuk 1 smoke test 15
-detik sebelum perbaikan output strategy) — jauh lebih terkelola.
+Hasil dari pengujian praktikum ini bukan berupa berkas file baru (seperti `.json`/`.csv`) yang tersimpan di dalam folder, melainkan berupa Live Terminal Stdout Log yang langsung tercetak pada output cell Google Colab dengan rincian:
 
-| cache_mode | traffic_variant | replikasi |
-|---|---|---|
-| none, hybrid | legitimate, attack-unique, attack-pool, mixed-unique, mixed-pool | 1-5 |
+- **Informasi Perangkat Keras:** Menampilkan status CUDA, cuDNN, dan tipe GPU aktif (`GPU: Tesla T4`).
+- **Detail Lapisan Jaringan:** Menampilkan daftar layer konvolusi (`conv`), ukuran filter, perubahan dimensi resolusi gambar input ke output (misalnya `416 × 416 × 3 → 416 × 416 × 32`), serta nilai beban komputasi miliaran operasi (BFLOPS).
+- **Metrik Utama & Visual Gambar:** Di baris paling bawah setiap iterasi gambar, terminal mencetak durasi pemrosesan kecepatan inferensi dalam hitungan detik (contoh: `Predicted in 0.0XXXXX seconds`), daftar objek manusia beserta akurasinya (`person: XX%`), dan langsung menampilkan gambar hasil deteksi yang sudah dilengkapi kotak pembatas (*bounding box*).
 
-Dataset ini kemudian dipindahkan ke `04-data/_archive-50run-20260612/` setelah
-matrix 400-run (lihat bawah) dijalankan sebagai pengganti.
+Output YOLOv3 :
+https://colab.research.google.com/drive/1BFBBx0qb5tVRJhlo_bJqjW_djQaALQGG#scrollTo=v43GfoTzhDlC&fullscreenOutput=true
 
-## Hasil Matrix Penuh (400 run / 40 replikasi)
-
-Untuk memperbesar ukuran sampel statistik, matrix diperluas dari 5 menjadi 40
-replikasi per kombinasi (total 2 × 5 × 40 = 400 run). Loop baru
-`run-matrix.sh` (lihat [README](../05-kode/k6/README.md)) menjalankan
-replikasi 1..40 secara *interleaved* (loop replikasi di luar, loop
-mode/variant di dalam), sehingga jika proses berhenti di tengah jalan, setiap
-kombinasi tetap memiliki jumlah replikasi yang sama.
-
-Sebelum menjalankan matrix, token JWT legitimate (`lib/legit-tokens.json`)
-yang sebelumnya sudah *expired* (dibuat 2026-06-12, `exp +24h`) diregenerasi
-ulang via skrip seed Tahap 2 dan `gen-legit-tokens.sh`, serta cache Redis
-di-*flush* agar matrix dimulai dari kondisi cache dingin (konsisten dengan
-metodologi awal).
-
-Matrix 400 run dijalankan 2026-06-15, seluruhnya selesai dengan
-`k6_exit_code: 0` (0 `FAILED` pada `04-data/matrix-40run.log`), menghasilkan
-struktur `04-data/<cache_mode>__<traffic_variant>__rep<N>__<timestamp>/` yang
-sama seperti di atas, dengan replikasi 1-40 untuk tiap 10 kombinasi
-`(cache_mode, traffic_variant)`.
-
-Data 400-run ini menjadi input Tahap 4 (analisis & visualisasi), menggantikan
-dataset 50-run sebelumnya.
-
-## Catatan Lingkungan
-
-- **MSYS_NO_PATHCONV=1** diperlukan pada perintah `docker run` di Git Bash
-  (Windows) agar path container (`/scripts/...`, `/data/...`) tidak diubah
-  Git Bash/MSYS menjadi path Windows sebelum diteruskan ke `docker`.
-- Direktori `04-data/<run-id>/` kadang tidak bisa langsung dihapus
-  (`Device or resource busy`) tepat setelah `docker run --rm` dengan bind
-  mount selesai — ini transient lock Docker Desktop/WSL2 pada Windows, hilang
-  sendiri setelah beberapa saat.
+Output YOLOv2 :
+https://colab.research.google.com/drive/1BFBBx0qb5tVRJhlo_bJqjW_djQaALQGG#scrollTo=Hw38H8RUigQS&fullscreenOutput=true

@@ -176,10 +176,11 @@ Penelitian menerapkan integritas ilmiah dengan mencatat nilai orisinal performa 
 ### D.6 Batasan dan Asumsi Penelitian
 * **Asumsi Penelitian:**
   1. Unit pemroses grafis (GPU Tesla T4) berada pada kondisi alokasi performa puncak yang stabil tanpa mengalami pembatasan bandwidth komputasi oleh penyedia cloud selama pengujian berlangsung.
-  2. Sudut pandang kamera CCTV diasumsikan kokoh bersudut statis (fixed angle bird-eye view) mencakup seluruh luasan lantai lift.
+  2. Pengujian menggunakan citra simulasi dengan perspektif horizontal/sejajar mata (eye-level view) memanfaatkan pantulan cermin interior lift untuk merepresentasikan ruang terbatas secara optimal.
+  
 * **Batasan Penelitian:**
   1. Penelitian difokuskan eksklusif pada objek kelas tunggal yaitu person (manusia). Kemunculan deteksi objek lain (seperti tas, ponsel, lampu) diabaikan dari kalkulasi akurasi utama.
-  2. Jumlah data pengujian dibatasi pada 4 citra representatif hasil penarikan sampel bertujuan untuk menguji fungsionalitas kedalaman struktur layer konvolusi.
+  2. Jumlah data pengujian (testing) dibatasi pada 4 citra representatif menggunakan teknik purposive sampling. Batasan ini diterapkan sebagai langkah mitigasi teknis akibat adanya kendala I/O latency lag yang masif pada direktori Google Drive serta keterbatasan runtime memory pada Google Colab yang memicu crash (Out of Memory) saat pengujian skala besar.
   3. Sistem berjalan murni menggunakan kompilasi Darknet asli tanpa penambahan ekspansi modul optimasi visual dari pustaka OpenCV eksternal.
 
 ---

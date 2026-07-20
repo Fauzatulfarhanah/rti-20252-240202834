@@ -1,6 +1,6 @@
 # 07-manuskrip
 
-Draf naskah ilmiah — **Tahap 5**, target publikasi Sinta 2 (Jurnal RESTI).
+Draf naskah ilmiah — **Tahap 5**, target publikasi Jurnal UPB
 
 ## Naskah Konsolidasi
 

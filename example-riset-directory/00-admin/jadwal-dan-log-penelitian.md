@@ -1,33 +1,30 @@
 # Jadwal & Log Pelaksanaan Penelitian
 
-Catatan kronologis pelaksanaan tiap tahap (sumber: riwayat commit git & dokumen `09-docs/tahap-N-*.md`). Tanggal mengikuti `git log`.
+Catatan kronologis pelaksanaan tiap tahap (sumber: riwayat commit git & dokumen `09-docs/tahap-N-*.md`). Tanggal mengikuti data log pada repositori lokal.
 
 ## Log Pelaksanaan
 
 | Tanggal | Tahap | Aktivitas | Referensi |
 |---|---|---|---|
-| 2026-06-12 s.d. 2026-06-13 (commit 01:05) | Tahap 1 & 2 | Perancangan arsitektur/skema database; implementasi API Gateway Go (Echo) — clean architecture, migrasi Sqitch, seed script, docker-compose, verifikasi end-to-end (`CACHE_MODE=none`/`hybrid`, fail-closed/fail-open) | [09-docs/tahap-1-arsitektur-dan-skema-database.md](../09-docs/tahap-1-arsitektur-dan-skema-database.md), [09-docs/tahap-2-implementasi-gateway.md](../09-docs/tahap-2-implementasi-gateway.md) |
-| 2026-06-13 01:05 | Tahap 3 | Implementasi skrip k6 (`legitimate.js`, `attack.js`, `mixed.js`), runner & monitor resource | [09-docs/tahap-3-pengujian-k6.md](../09-docs/tahap-3-pengujian-k6.md) |
-| 2026-06-12 18:05–18:59 (≈54 menit) | Tahap 3 | Eksekusi matrix penuh 50 run (2 `CACHE_MODE` × 5 `traffic_variant` × 5 replikasi), seluruhnya `k6_exit_code = 0` | commit "Mark Tahap 3 complete after running full 50-run k6 matrix" (2026-06-13 02:00) |
-| 2026-06-13 07:41 | Tahap 4 | Pipeline analisis Python (`run_all.py`), 6 tabel CSV + 5 figure PNG, dokumen Tahap 4 diperbarui ke status Selesai | [09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md), [06-output/](../06-output/) |
-| 2026-06-13 | Tahap 5 | Draf konten naskah (8 bagian) di `07-manuskrip/`; pelengkapan `01-proposal/`, `02-literatur/`, `03-teori/`, dan laporan penelitian `08-laporan/` | [09-docs/tahap-5-draf-paper.md](../09-docs/tahap-5-draf-paper.md), [08-laporan/laporan-penelitian.md](../08-laporan/laporan-penelitian.md) |
-| 2026-06-13 | Tahap 5 | Verifikasi CVE-2026-48524 (terkonfirmasi via GHSA-fhv5-28vv-h8m8); pencarian 18 referensi literatur nyata & penyusunan bibliografi Mendeley; pelengkapan §2.4 *Related Work* di `03-tinjauan-pustaka.md` dan `07-daftar-pustaka.md`; penyusunan naskah konsolidasi `naskah-jurnal.md`/`.docx` | [02-literatur/matriks-literatur.md](../02-literatur/matriks-literatur.md), [02-literatur/daftar-pustaka.bib](../02-literatur/daftar-pustaka.bib), [07-manuskrip/naskah-jurnal.md](../07-manuskrip/naskah-jurnal.md) |
-| 2026-06-15 | Tahap 3 & 4 | Perluasan replikasi dari 5 menjadi 40 per kombinasi: regenerasi token JWT legitimate (sebelumnya *expired*), flush cache Redis, eksekusi matrix penuh 400 run (2 `CACHE_MODE` × 5 `traffic_variant` × 40 replikasi) via `run-matrix.sh`, seluruhnya `k6_exit_code = 0` (selesai 2026-06-15T09:53:24Z); dataset 50-run lama diarsipkan ke `04-data/_archive-50run-20260612/`; pipeline analisis (`run_all.py`) dijalankan ulang atas dataset baru; seluruh statistik di `naskah-jurnal.md`/`.docx`, `00-outline.md`, dan dokumen `09-docs/`/`08-laporan/`/`01-proposal/` diperbarui ke n=40 | [09-docs/tahap-3-pengujian-k6.md](../09-docs/tahap-3-pengujian-k6.md), [09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md), [04-data/matrix-40run.log](../04-data/matrix-40run.log) |
+| 2026-05-1 s.d. 2026-05-31 | Tahap 1 & 2 | Perancangan skema eksperimen komparatif terkontrol; studi literatur perbedaan arsitektur Darknet-19 (YOLOv2) vs Darknet-53 (YOLOv3); setup environment Google Colab bertenaga GPU NVIDIA Tesla T4; kompilasi kerangka Darknet asli berbasis C/CUDA via berkas Makefile (`GPU=1`, `CUDNN=1`, `OPENCV=1`). | [09-docs/tahap-1-studi-arsitektur.md](../09-docs/tahap-1-studi-arsitektur.md), [09-docs/tahap-2-setup-darknet.md](../09-docs/tahap-2-setup-darknet.md) |
+| 2026-06-06 | Tahap 3 | Pengumpulan dataset awal sebanyak **150 citra uji**. Eksekusi pengujian skala besar massal dilakukan melalui terminal CLI, namun memicu kendala teknis berupa *I/O latency lag* yang masif pada direktori Google Drive serta menyebabkan *runtime memory* Google Colab mengalami *crash*/*timeout* (Out of Memory). | [09-docs/tahap-3-pengujian-otomatisasi.md](../09-docs/tahap-3-pengujian-otomatisasi.md) |
+| 2026-06-13 s.d. 2026-07-1 | Tahap 3 | **Peralihan Strategi Metodologis:** Mitigasi kendala *resource constraint* dilakukan dengan menerapkan teknik *purposive sampling*, mereduksi kuantitas menjadi **4 citra uji yang paling representatif** mencakup skenario kepadatan Rendah (`amigos.jpg`), Sedang (`download.jpg`, `leonel lara.jpg`), dan Tinggi (`@jaoyng on instagram.jpg`). Eksekusi ulang dijalankan secara sekuensial menggunakan parameter *headless* `-dont_show` untuk mengamankan stabilitas server. | commit "Mitigasi runtime crash via purposive sampling 4 citra representatif dan aktivasi headless mode" (2026-06-14) |
+| 2026-07-3 | Tahap 4 | Pembangunan pipeline analisis data untuk mengekstraksi data kuantitatif dari *raw log console* terminal. Data metrik *inference time* (milidetik) dan *confidence score* (%) berhasil direkapitulasi ke dalam berkas `tabel_komparasi_analisis.csv` di folder output. Resolusi *error X11 display* ditangani menggunakan skrip *patching* `cv2_imshow` untuk mengekspor visualisasi *bounding box*. | [09-docs/tahap-4-analisis-data.md](../09-docs/tahap-4-analisis-data.md), [06-output/](../06-output/) |
+| 2026-07-10 | Tahap 5 | Penyusunan draf konten naskah ilmiah (8 bagian terstruktur) di direktori `07-manuskrip/` dengan target publikasi ke Jurnal UPB. Proses pembaruan data kuantitatif berbasis hasil eksperimen 4 citra representatif diintegrasikan secara menyeluruh ke dokumen proposal (`01-proposal/`), tinjauan pustaka (`02-literatur/`), dan laporan akhir (`08-laporan/`). | [09-docs/tahap-5-draf-paper.md](../09-docs/tahap-5-draf-paper.md), [08-laporan/laporan-penelitian_example.md](../08-laporan/laporan-penelitian_example.md) |
+| 2026-07-12 | Tahap 5 | Identifikasi dan pencarian referensi literatur utama nyata (termasuk *paper* fundamental YOLO oleh Joseph Redmon & Ali Farhadi, serta studi komparasi sejenis oleh Pamungkas et al., 2021). Penyusunan bibliografi secara terstruktur menggunakan Mendeley dan melakukan sinkronisasi dokumen sitasi pada `daftar-pustaka.bib`. | [02-literatur/matriks-literatur.md](../02-literatur/matriks-literatur.md), [02-literatur/daftar-pustaka.bib](../02-literatur/daftar-pustaka.bib), [07-manuskrip/naskah-jurnal.md](../07-manuskrip/naskah-jurnal.md) |
 
 ## Status Ringkas
 
-- **Tahap 1–4**: Selesai (dataset final: matrix 400 run / 40 replikasi per kombinasi, 2026-06-15).
-- **Tahap 5**: Konten naskah selesai dengan statistik n=40 (termasuk tinjauan pustaka & verifikasi CVE-2026-48524); menyisakan keputusan bahasa final dan pemindahan ke template jurnal tujuan (dilakukan oleh peneliti).
+- **Tahap 1–4**: Selesai (Dataset final berbasis 4 citra uji representatif multi-skenario kepadatan berhasil diekstraksi secara kuantitatif per tanggal 2026-06-14).
+- **Tahap 5**: Konten naskah utama selesai dengan pembahasan *trade-off* komparasi parameter komputasi Darknet-19 vs Darknet-53; menyisakan pemindahan format ke gaya selingkung Jurnal UPB.
 
 ## Item Tindak Lanjut (Checklist Sebelum Submission)
 
-- [x] Lengkapi matriks literatur dengan paper *related work* nyata ([02-literatur/matriks-literatur.md](../02-literatur/matriks-literatur.md)) — 18 referensi terverifikasi
-- [x] Verifikasi CVE-2026-48524 terhadap basis data NVD/MITRE — terkonfirmasi via GHSA-fhv5-28vv-h8m8 (PyJWT, CVSS 3.7)
-- [ ] Tetapkan bahasa final naskah (Indonesia/Inggris) sesuai jurnal tujuan
-- [ ] Pindahkan konten [07-manuskrip/naskah-jurnal.md](../07-manuskrip/naskah-jurnal.md)/`.docx` ke template jurnal tujuan
-- [ ] Finalisasi penempatan figure/tabel sesuai gaya jurnal
-- [ ] Review akhir seluruh klaim numerik agar konsisten antar dokumen (lihat daftar pada [07-manuskrip/00-outline.md](../07-manuskrip/00-outline.md))
+- [x] Lengkapi matriks literatur dengan paper *related work* nyata (Pamungkas et al., Redmon & Farhadi) — Referensi terverifikasi sahih
+- [x] Dokumentasikan mitigasi teknis *runtime crash* akibat batas kapasitas komputasi Google Colab pada Bab Kendala Eksperimen
+- [ ] Sesuaikan bahasa dan format penulisan naskah akhir di [07-manuskrip/naskah-jurnal.md](../07-manuskrip/naskah-jurnal.md) dengan panduan penulis (*author guidelines*) Jurnal UPB
+- [ ] Pindahkan konten draf manuskrip ke dalam template resmi dokumen Jurnal UPB (`.docx`)
+- [ ] Finalisasi penempatan visual gambar hasil deteksi *bounding box* sesuai dengan urutan pembahasan skenario kepadatan
+- [ ] Review akhir seluruh klaim numerik metrik *inference time* dan persentase *confidence score* agar konsisten dan sinkron antar dokumen laporan
 
 ## Korespondensi
-
-*(belum ada — tambahkan catatan korespondensi dengan pembimbing/editor jurnal di sini saat tersedia)*
